@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="harmonica_primary">#5A5A40</color>    <!-- Deep Olive -->
+    <color name="harmonica_bg">#F5F5F0</color>         <!-- Warm Paper -->
+    <color name="harmonica_accent">#F27D26</color>     <!-- Soft Sunset -->
+    <color name="harmonica_card">#FFFFFF</color>       <!-- Pure White -->
+    <color name="harmonica_text">#2D2D2D</color>       <!-- Soft Black -->
+    <color name="harmonica_hint">#8E8E8E</color>       <!-- Muted Gray -->
+</resources>
