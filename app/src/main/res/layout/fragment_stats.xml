@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@color/harmonica_bg">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Monthly Recap"
+        android:fontFamily="serif"
+        android:textSize="28sp"
+        android:textColor="@color/harmonica_primary"
+        android:textStyle="italic" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Your emotional and hormonal trend"
+        android:textColor="@color/harmonica_hint"
+        android:textSize="14sp"
+        android:layout_marginBottom="32dp"/>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="0dp">
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/moodChart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp" />
+    </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:id="@+id/txtSummary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Keep chatting with Harmonica to see your progress."
+        android:textColor="@color/harmonica_text"
+        android:fontFamily="serif"
+        android:textSize="16sp"
+        android:lineSpacingExtra="4dp"/>
+
+</LinearLayout>

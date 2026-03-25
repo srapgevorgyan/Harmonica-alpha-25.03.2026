@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@color/harmonica_bg">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hormonal Education"
+        android:fontFamily="serif"
+        android:textSize="28sp"
+        android:textColor="@color/harmonica_primary"
+        android:textStyle="italic" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Understanding the chemistry of your soul"
+        android:textColor="@color/harmonica_hint"
+        android:textSize="14sp"
+        android:layout_marginBottom="32dp"/>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:id="@+id/txtHormoneName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cortisol"
+                android:textColor="@color/harmonica_accent"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtHormoneDesc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Known as the 'stress hormone', cortisol helps your body respond to danger but can cause anxiety if levels stay high."
+                android:textColor="@color/harmonica_text"
+                android:textSize="16sp"
+                android:lineSpacingExtra="4dp" />
+
+            <Button
+                android:id="@+id/btnLearnMore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Read Medical Study"
+                android:backgroundTint="@color/harmonica_primary"
+                android:textColor="@color/white"
+                app:cornerRadius="12dp" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <Button
+        android:id="@+id/btnNextHormone"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginTop="32dp"
+        android:text="Discover Another Hormone"
+        android:backgroundTint="@color/harmonica_bg"
+        android:textColor="@color/harmonica_primary"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        app:strokeColor="@color/harmonica_primary"
+        app:cornerRadius="30dp" />
+
+</LinearLayout>

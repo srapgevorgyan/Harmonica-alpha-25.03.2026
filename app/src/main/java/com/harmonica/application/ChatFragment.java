@@ -50,12 +50,12 @@ public class ChatFragment extends Fragment {
             @Override
             public void onResult(GeminiService.MoodAnalysis analysis) {
                 txtLabel.setText(analysis.label + " (Intensity: " + analysis.score + "/10)");
-
-                // Combine Insight and Advice for a "Psychologist" feel
+                // insight and advice combination for psychologist feel
                 String fullResponse = analysis.insight + "\n\n" + analysis.advice;
                 txtResponse.setText(fullResponse);
 
-                // TODO: Save to database for Monthly Recap later
+                MoodDatabase db = new MoodDatabase(getContext());
+                db.saveMood(analysis.score);
             }
 
             @Override

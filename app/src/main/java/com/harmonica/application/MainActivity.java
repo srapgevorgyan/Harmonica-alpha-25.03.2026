@@ -35,11 +35,9 @@ public class MainActivity extends AppCompatActivity {
             if (id == R.id.nav_chat) {
                 selectedFragment = new ChatFragment();
             } else if (id == R.id.nav_stats) {
-                // We will create this next!
-                // selectedFragment = new StatsFragment();
+                selectedFragment = new StatsFragment();
             } else if (id == R.id.nav_edu) {
-                // We will create this next!
-                // selectedFragment = new EducationFragment();
+                selectedFragment = new EducationFragment();
             }
 
             if (selectedFragment != null) {
