@@ -1,61 +1,21 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:padding="16dp"
+    android:background="@color/harmonica_bg">
 
-    <!-- The Psychologist's Response Card -->
-    <androidx.cardview.widget.CardView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/chatRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        app:cardCornerRadius="24dp"
-        app:cardElevation="0dp"
-        app:cardBackgroundColor="@color/harmonica_card">
+        android:layout_weight="1" />
 
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="24dp"
-            android:fadeScrollbars="true">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/txtMoodLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Welcome to Harmonica"
-                    android:textColor="@color/harmonica_accent"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textAllCaps="true"
-                    android:letterSpacing="0.1" />
-
-                <TextView
-                    android:id="@+id/txtResponse"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="I am here to listen. How are you feeling in your body and mind today?"
-                    android:textColor="@color/harmonica_text"
-                    android:fontFamily="serif"
-                    android:textSize="18sp"
-                    android:lineSpacingExtra="6dp" />
-            </LinearLayout>
-        </ScrollView>
-    </androidx.cardview.widget.CardView>
-
-    <!-- Input Bar -->
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        app:cardBackgroundColor="@color/harmonica_card"
         app:cardCornerRadius="30dp"
         app:cardElevation="2dp">
 
@@ -63,8 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="10dp"
-            android:gravity="center_vertical">
+            android:padding="8dp">
 
             <EditText
                 android:id="@+id/editMoodInput"
@@ -72,19 +31,18 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:background="@null"
-                android:hint="Share your thoughts..."
+                android:hint="Talk to Dr. Harmonica..."
                 android:padding="12dp"
-                android:textColorHint="@color/harmonica_hint"
-                android:textSize="16sp" />
+                android:textColor="@color/harmonica_text"
+                android:textColorHint="@color/harmonica_hint" />
 
             <ImageButton
                 android:id="@+id/btnSend"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:background="@android:color/transparent"
                 android:src="@android:drawable/ic_menu_send"
                 app:tint="@color/harmonica_primary" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
-
 </LinearLayout>

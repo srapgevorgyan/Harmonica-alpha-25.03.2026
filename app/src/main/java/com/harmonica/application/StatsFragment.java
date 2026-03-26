@@ -41,9 +41,12 @@ public class StatsFragment extends Fragment {
             entries.add(new Entry(i, scores.get(scores.size() - 1 - i)));
         }
 
+        int primaryColor = getResources().getColor(R.color.harmonica_primary, null);
+        int accentColor = getResources().getColor(R.color.harmonica_accent, null);
+
         LineDataSet dataSet = new LineDataSet(entries, "Mood Intensity");
-        dataSet.setColor(Color.parseColor("#5A5A40")); // Olive
-        dataSet.setCircleColor(Color.parseColor("#F27D26")); // Sunset
+        dataSet.setColor(primaryColor); // Olive
+        dataSet.setCircleColor(accentColor); // Sunset
         dataSet.setLineWidth(3f);
         dataSet.setDrawValues(false);
         dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // Smooth curve

@@ -9,4 +9,5 @@
     <color name="harmonica_card">#FFFFFF</color>       <!-- Pure White -->
     <color name="harmonica_text">#2D2D2D</color>       <!-- Soft Black -->
     <color name="harmonica_hint">#8E8E8E</color>       <!-- Muted Gray -->
+
 </resources>

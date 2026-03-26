@@ -32,18 +32,26 @@ public class MainActivity extends AppCompatActivity {
             int id = item.getItemId();
             Fragment selectedFragment = null;
 
-            if (id == R.id.nav_chat) {
-                selectedFragment = new ChatFragment();
-            } else if (id == R.id.nav_stats) {
-                selectedFragment = new StatsFragment();
-            } else if (id == R.id.nav_edu) {
-                selectedFragment = new EducationFragment();
+            if (item.getGroupId() == 2) {
+                // It's a chat session!
+                ChatFragment chat = new ChatFragment();
+                Bundle b = new Bundle();
+                b.putLong("sessionId", item.getItemId());
+                chat.setArguments(b);
+                loadFragment(chat);
             }
-
-            if (selectedFragment != null) {
-                loadFragment(selectedFragment);
+            else {
+                if (id == R.id.nav_chat) {
+                    selectedFragment = new ChatFragment();
+                } else if (id == R.id.nav_stats) {
+                    selectedFragment = new StatsFragment();
+                } else if (id == R.id.nav_edu) {
+                    selectedFragment = new EducationFragment();
+                }
+                if (selectedFragment != null) {
+                    loadFragment(selectedFragment);
+                }
             }
-
             drawerLayout.closeDrawer(GravityCompat.START);
             return true;
         });
@@ -78,5 +86,28 @@ public class MainActivity extends AppCompatActivity {
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
                 .commit();
+    }
+
+    private void updateMenuWithSessions() {
+        NavigationView navView = findViewById(R.id.nav_view);
+        android.view.Menu menu = navView.getMenu();
+
+        // Clear old dynamic items but keep static ones (Stats, Edu)
+        menu.removeGroup(2);
+
+        MoodDatabase db = new MoodDatabase(this);
+        android.database.Cursor cursor = db.getSessions();
+
+        int index = 0;
+        if (cursor.moveToFirst()) {
+            do {
+                long sid = cursor.getLong(0);
+                String title = cursor.getString(1);
+                // Add to a new group (ID: 2)
+                MenuItem item = menu.add(2, (int)sid, index++, title);
+                item.setIcon(android.R.drawable.ic_menu_agenda);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
     }
 }
