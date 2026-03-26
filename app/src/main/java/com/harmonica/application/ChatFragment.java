@@ -7,7 +7,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -33,10 +32,7 @@ public class ChatFragment extends Fragment {
         db = new MoodDatabase(getContext());
         gemini = new GeminiService();
 
-        // Get sessionId from arguments (passed from MainActivity)
         if (getArguments() != null) sessionId = getArguments().getLong("sessionId", -1);
-
-        // If no session, create a new one
         if (sessionId == -1) sessionId = db.createSession("New Conversation " + System.currentTimeMillis());
 
         recyclerView = v.findViewById(R.id.chatRecyclerView);
@@ -48,7 +44,6 @@ public class ChatFragment extends Fragment {
         recyclerView.setAdapter(adapter);
 
         loadHistory();
-
         btnSend.setOnClickListener(view -> sendMessage());
 
         return v;
@@ -64,9 +59,7 @@ public class ChatFragment extends Fragment {
         }
         cursor.close();
         adapter.notifyDataSetChanged();
-        if (messageList.size() > 0) {
-            recyclerView.scrollToPosition(messageList.size() - 1);
-        }
+        if (messageList.size() > 0) recyclerView.scrollToPosition(messageList.size() - 1);
     }
 
     private void sendMessage() {
@@ -77,27 +70,46 @@ public class ChatFragment extends Fragment {
         db.saveMessage(sessionId, "user", text);
         messageList.add(new MessageAdapter.Message(text, "user"));
         adapter.notifyItemInserted(messageList.size() - 1);
-        if (messageList.size() > 0) {
-            recyclerView.scrollToPosition(messageList.size() - 1);
-        }
+        recyclerView.scrollToPosition(messageList.size() - 1);
         editInput.setText("");
 
-        // 2. Get AI Response
+        // 2. Show Typing Indicator
+        MessageAdapter.Message typingIndicator = MessageAdapter.Message.typing();
+        messageList.add(typingIndicator);
+        adapter.notifyItemInserted(messageList.size() - 1);
+        recyclerView.scrollToPosition(messageList.size() - 1);
+
+        // 3. Get AI Response
         gemini.analyzeMood(text, new GeminiService.AnalysisCallback() {
             @Override
             public void onResult(GeminiService.MoodAnalysis analysis) {
-                String aiText = analysis.insight + "\n\n" + analysis.advice;
-                db.saveMessage(sessionId, "ai", aiText);
-                db.saveMood(analysis.score); // Still track mood for graph
+                if (getActivity() == null) return;
+                getActivity().runOnUiThread(() -> {
+                    // Remove typing indicator
+                    int index = messageList.indexOf(typingIndicator);
+                    if (index != -1) {
+                        messageList.remove(index);
+                        adapter.notifyItemRemoved(index);
+                    }
 
-                messageList.add(new MessageAdapter.Message(aiText, "ai"));
-                adapter.notifyItemInserted(messageList.size() - 1);
-                recyclerView.scrollToPosition(messageList.size() - 1);
+                    String aiText = analysis.insight + "\n\n" + analysis.advice;
+                    db.saveMessage(sessionId, "ai", aiText);
+                    db.saveMood(analysis.score);
+
+                    messageList.add(new MessageAdapter.Message(aiText, "ai"));
+                    adapter.notifyItemInserted(messageList.size() - 1);
+                    recyclerView.scrollToPosition(messageList.size() - 1);
+                });
             }
 
             @Override
             public void onError(String message) {
-                Toast.makeText(getContext(), "Error: " + message, Toast.LENGTH_SHORT).show();
+                if (getActivity() == null) return;
+                getActivity().runOnUiThread(() -> {
+                    messageList.remove(typingIndicator);
+                    adapter.notifyDataSetChanged();
+                    Toast.makeText(getContext(), "Error: " + message, Toast.LENGTH_SHORT).show();
+                });
             }
         });
     }
