@@ -42,7 +42,7 @@ public class GeminiService {
 
         GenerativeModel baseModel = new GenerativeModel(
                 "gemini-2.5-flash",
-                "AIzaSyDJiL7RQaHokuewdHRqNrMrxMxGxLzyBH4",
+                "AIzaSyDVrv_c68MWNuUabFBnIP4uhmoBKMRuHDE",
                 config,
                 new ArrayList<>(),
                 requestOptions
