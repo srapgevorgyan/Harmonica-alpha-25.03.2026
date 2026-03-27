@@ -65,6 +65,20 @@ public class ChatFragment extends Fragment {
     private void sendMessage() {
         String text = editInput.getText().toString().trim();
         if (text.isEmpty()) return;
+// 1. If this is a brand new session, update the title with the first message
+        android.database.Cursor checkCursor = db.getMessages(sessionId);
+        if (checkCursor.getCount() == 0) {
+            String newTitle = text.length() > 25 ? text.substring(0, 25) + "..." : text;
+            db.updateSessionTitle(sessionId, newTitle);
+
+            // Refresh the sidebar in MainActivity
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).updateMenuWithSessions();
+            }
+        }
+        checkCursor.close();
+        db.saveMessage(sessionId, "user", text);
+
 
         // 1. Save & Show User Message
         db.saveMessage(sessionId, "user", text);

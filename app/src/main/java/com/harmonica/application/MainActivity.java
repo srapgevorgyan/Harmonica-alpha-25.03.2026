@@ -8,7 +8,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.navigation.NavigationView;
-
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -20,21 +20,22 @@ public class MainActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // 1. Initialize UI Components
+
+
+        // UI Components
         drawerLayout = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         ImageButton btnMenu = findViewById(R.id.btnMenu);
 
-        // 2. Handle the Menu Button (Open the side drawer)
+        // Menu Button (Open the side drawer)
         btnMenu.setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
 
-        // 3. Handle Navigation Clicks
+        // Navigation Clicks
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
             Fragment selectedFragment = null;
 
             if (item.getGroupId() == 2) {
-                // It's a chat session!
                 ChatFragment chat = new ChatFragment();
                 Bundle b = new Bundle();
                 b.putLong("sessionId", item.getItemId());
@@ -79,6 +80,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+
+        updateMenuWithSessions();
     }
 
     // Helper method to swap fragments smoothly
@@ -89,26 +93,38 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
     }
 
-    private void updateMenuWithSessions() {
+    public void updateMenuWithSessions() {
         NavigationView navView = findViewById(R.id.nav_view);
         android.view.Menu menu = navView.getMenu();
 
-        // Clear old dynamic items but keep static ones (Stats, Edu)
+        // Clear old dynamic items (Group 2 is our history group)
         menu.removeGroup(2);
 
         MoodDatabase db = new MoodDatabase(this);
-        android.database.Cursor cursor = db.getSessions();
+        List<MoodDatabase.SessionHeader> sessions = db.getCategorizedSessions();
 
-        int index = 0;
-        if (cursor.moveToFirst()) {
-            do {
-                long sid = cursor.getLong(0);
-                String title = cursor.getString(1);
-                // Add to a new group (ID: 2)
-                MenuItem item = menu.add(2, (int)sid, index++, title);
-                item.setIcon(android.R.drawable.ic_menu_agenda);
-            } while (cursor.moveToNext());
+        android.view.SubMenu todaySub = null;
+        android.view.SubMenu yesterdaySub = null;
+        android.view.SubMenu previousSub = null;
+
+        for (MoodDatabase.SessionHeader session : sessions) {
+            android.view.SubMenu targetSub;
+
+            // Group by category
+            if (session.category.equals("Today")) {
+                if (todaySub == null) todaySub = menu.addSubMenu(2, android.view.Menu.NONE, 1, "Today");
+                targetSub = todaySub;
+            } else if (session.category.equals("Yesterday")) {
+                if (yesterdaySub == null) yesterdaySub = menu.addSubMenu(2, android.view.Menu.NONE, 2, "Yesterday");
+                targetSub = yesterdaySub;
+            } else {
+                if (previousSub == null) previousSub = menu.addSubMenu(2, android.view.Menu.NONE, 3, "Previous");
+                targetSub = previousSub;
+            }
+
+            // Add the session item
+            android.view.MenuItem item = targetSub.add(2, (int)session.id, android.view.Menu.NONE, session.title);
+            item.setIcon(R.drawable.ic_chat_bubble); // Use your chat icon here
         }
-        cursor.close();
     }
 }

@@ -80,4 +80,53 @@ public class MoodDatabase extends SQLiteOpenHelper {
         cursor.close();
         return scores;
     }
+
+
+    // saved chats logic
+
+    public static class SessionHeader {
+        public long id;
+        public String title, category;
+        public SessionHeader(long id, String title, String category) {
+            this.id = id; this.title = title; this.category = category;
+        }
+    }
+
+    public List<SessionHeader> getCategorizedSessions() {
+        List<SessionHeader> headers = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // This query calculates the category (Today, Yesterday, Previous) based on the timestamp
+        String query = "SELECT id, title, timestamp, " +
+                "CASE " +
+                "WHEN date(timestamp/1000, 'unixepoch', 'localtime') = date('now', 'localtime') THEN 'Today' " +
+                "WHEN date(timestamp/1000, 'unixepoch', 'localtime') = date('now', 'localtime', '-1 day') THEN 'Yesterday' " +
+                "ELSE 'Previous' END as category " +
+                "FROM sessions ORDER BY timestamp DESC";
+
+        Cursor cursor = db.rawQuery(query, null);
+        if (cursor.moveToFirst()) {
+            do {
+                headers.add(new SessionHeader(
+                        cursor.getLong(0),
+                        cursor.getString(1),
+                        cursor.getString(3)
+                ));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return headers;
+    }
+
+    // Add this to allow updating the title after the first message
+    public void updateSessionTitle(long id, String newTitle) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues v = new ContentValues();
+        v.put("title", newTitle);
+        db.update("sessions", v, "id = ?", new String[]{String.valueOf(id)});
+    }
+
+
+
+
 }
