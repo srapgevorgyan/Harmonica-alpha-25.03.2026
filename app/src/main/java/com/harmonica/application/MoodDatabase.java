@@ -16,6 +16,16 @@ public class MoodDatabase extends SQLiteOpenHelper {
         super(context, DB_NAME, null, DB_VERSION);
     }
 
+    public static class MoodEntry {
+        public int score;
+        public long timestamp;
+        public MoodEntry(int score, long timestamp) {
+            this.score = score;
+            this.timestamp = timestamp;
+        }
+    }
+
+
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE moods (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, score INTEGER)");
@@ -42,9 +52,6 @@ public class MoodDatabase extends SQLiteOpenHelper {
         return db.insert("sessions", null, v);
     }
 
-    public Cursor getSessions() {
-        return this.getReadableDatabase().rawQuery("SELECT * FROM sessions ORDER BY timestamp DESC", null);
-    }
 
     // --- Message Methods ---
     public void saveMessage(long sessionId, String sender, String text) {
@@ -70,15 +77,23 @@ public class MoodDatabase extends SQLiteOpenHelper {
         db.insert("moods", null, values);
     }
 
-    public List<Integer> getRecentScores() {
-        List<Integer> scores = new ArrayList<>();
+    public List<MoodEntry> getRecentMoodEntries() {
+        List<MoodEntry> entries = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT score FROM moods ORDER BY id DESC LIMIT 7", null);
+
+        // Get the last 7 entries with both score and date
+        Cursor cursor = db.rawQuery("SELECT score, date FROM moods ORDER BY id DESC LIMIT 7", null);
+
         if (cursor.moveToFirst()) {
-            do { scores.add(cursor.getInt(0)); } while (cursor.moveToNext());
+            do {
+                entries.add(new MoodEntry(
+                        cursor.getInt(0),
+                        Long.parseLong(cursor.getString(1)) // Parse the timestamp string back to long
+                ));
+            } while (cursor.moveToNext());
         }
         cursor.close();
-        return scores;
+        return entries;
     }
 
 
