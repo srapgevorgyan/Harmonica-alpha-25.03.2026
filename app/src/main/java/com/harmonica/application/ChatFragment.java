@@ -27,6 +27,7 @@ public class ChatFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
         View v = inflater.inflate(R.layout.fragment_chat, container, false);
 
         db = new MoodDatabase(getContext());
@@ -48,6 +49,7 @@ public class ChatFragment extends Fragment {
         btnSend.setOnClickListener(view -> sendMessage());
 
         return v;
+
     }
 
     private void loadHistory() {
