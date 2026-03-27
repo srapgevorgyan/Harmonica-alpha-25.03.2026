@@ -1,8 +1,5 @@
 package com.harmonica.application;
 
-
-//working gemini assistant class
-
 import com.google.ai.client.generativeai.GenerativeModel;
 import com.google.ai.client.generativeai.java.GenerativeModelFutures;
 import com.google.ai.client.generativeai.type.Content;
@@ -13,6 +10,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.json.JSONObject; // Standard Android JSON library
+
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 
@@ -21,9 +20,10 @@ public class GeminiService {
 
     public static class MoodAnalysis {
         public int score = 5;
-        public String label = "Reflective";
+        public String label = "Neutral";
         public String insight = "";
         public String advice = "";
+        public String chatTitle = "New Conversation";
     }
 
     public interface AnalysisCallback {
@@ -32,15 +32,14 @@ public class GeminiService {
     }
 
     public GeminiService() {
-        // 1. Personality Config
         GenerationConfig.Builder configBuilder = new GenerationConfig.Builder();
         configBuilder.temperature = 0.75f;
+        // Force JSON response if the model supports it
+        configBuilder.responseMimeType = "application/json";
         GenerationConfig config = configBuilder.build();
 
-        // 2. Request Options
         RequestOptions requestOptions = new RequestOptions();
 
-        // 3. Initialize the base model
         GenerativeModel baseModel = new GenerativeModel(
                 "gemini-2.5-flash",
                 "AIzaSyDJiL7RQaHokuewdHRqNrMrxMxGxLzyBH4",
@@ -49,24 +48,22 @@ public class GeminiService {
                 requestOptions
         );
 
-        // 4. Wrap it for JAVA (This fixes the red lines!)
         this.model = GenerativeModelFutures.from(baseModel);
     }
 
     public void analyzeMood(String userText, AnalysisCallback callback) {
         android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
-
-        String systemPrompt = "You are Dr. Harmonica, a world-class psychologist and endocrinology expert. " +
-                "Tone: Warm, deeply empathetic, scientifically grounded. " +
-                "Explain the psychological & hormonal triggers (e.g. Cortisol, Serotonin). " +
-                "Format: SCORE: [1-10]|LABEL: [Mood]|INSIGHT: [Explanation]|ADVICE: [Tip]";
+        String systemPrompt = "You are Dr. Harmonica, a world-class psychologist. " +
+                "Analyze the user's mood and hormonal triggers. " +
+                "IMPORTANT: You MUST respond ONLY with a valid JSON object. " +
+                "JSON Schema: " +
+                "{ \"score\": number, \"label\": string, \"insight\": string, \"advice\": string, \"chatTitle\": string }";
 
         Content content = new Content.Builder()
                 .addText(systemPrompt + "\n\nUser: " + userText)
                 .build();
 
-        // Use the Java-friendly Future call
         ListenableFuture<GenerateContentResponse> response = model.generateContent(content);
 
         Futures.addCallback(response, new FutureCallback<GenerateContentResponse>() {
@@ -81,22 +78,34 @@ public class GeminiService {
             public void onFailure(Throwable t) {
                 mainHandler.post(() -> callback.onError(t.getMessage()));
             }
-        }, Executors.newSingleThreadExecutor()); // Run in background
+        }, Executors.newSingleThreadExecutor());
     }
 
     private MoodAnalysis parseResponse(String raw) {
         MoodAnalysis m = new MoodAnalysis();
-        if (raw == null) return m;
+        if (raw == null || raw.isEmpty()) return m;
+
         try {
-            String[] parts = raw.split("\\|");
-            for (String p : parts) {
-                if (p.contains("SCORE:")) m.score = Integer.parseInt(p.replace("SCORE:", "").trim());
-                if (p.contains("LABEL:")) m.label = p.replace("LABEL:", "").trim();
-                if (p.contains("INSIGHT:")) m.insight = p.replace("INSIGHT:", "").trim();
-                if (p.contains("ADVICE:")) m.advice = p.replace("ADVICE:", "").trim();
+            // Clean the string (sometimes Gemini wraps JSON in markdown ```json blocks)
+            String jsonStr = raw.trim();
+            if (jsonStr.startsWith("```json")) {
+                jsonStr = jsonStr.substring(7, jsonStr.length() - 3).trim();
+            } else if (jsonStr.startsWith("```")) {
+                jsonStr = jsonStr.substring(3, jsonStr.length() - 3).trim();
             }
+
+            JSONObject json = new JSONObject(jsonStr);
+
+            m.score = json.optInt("score", 5);
+            m.label = json.optString("label", "Neutral");
+            m.insight = json.optString("insight", "");
+            m.advice = json.optString("advice", "");
+            m.chatTitle = json.optString("chatTitle", "New Conversation");
+
         } catch (Exception e) {
-            m.insight = raw; // Fallback
+            // Fallback: If JSON parsing fails, put the raw text in the insight
+            m.insight = raw;
+            m.advice = "I'm processing your thoughts. Tell me more.";
         }
         return m;
     }

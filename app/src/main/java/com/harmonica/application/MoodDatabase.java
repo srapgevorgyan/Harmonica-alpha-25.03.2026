@@ -125,8 +125,4 @@ public class MoodDatabase extends SQLiteOpenHelper {
         v.put("title", newTitle);
         db.update("sessions", v, "id = ?", new String[]{String.valueOf(id)});
     }
-
-
-
-
 }

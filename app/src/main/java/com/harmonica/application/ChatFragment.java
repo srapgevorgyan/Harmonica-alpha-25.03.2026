@@ -32,8 +32,9 @@ public class ChatFragment extends Fragment {
         db = new MoodDatabase(getContext());
         gemini = new GeminiService();
 
+        // Retrieve sessionId from arguments or create a temporary one
         if (getArguments() != null) sessionId = getArguments().getLong("sessionId", -1);
-        if (sessionId == -1) sessionId = db.createSession("New Conversation " + System.currentTimeMillis());
+        if (sessionId == -1) sessionId = db.createSession("New Conversation...");
 
         recyclerView = v.findViewById(R.id.chatRecyclerView);
         editInput = v.findViewById(R.id.editMoodInput);
@@ -65,20 +66,6 @@ public class ChatFragment extends Fragment {
     private void sendMessage() {
         String text = editInput.getText().toString().trim();
         if (text.isEmpty()) return;
-// 1. If this is a brand new session, update the title with the first message
-        android.database.Cursor checkCursor = db.getMessages(sessionId);
-        if (checkCursor.getCount() == 0) {
-            String newTitle = text.length() > 25 ? text.substring(0, 25) + "..." : text;
-            db.updateSessionTitle(sessionId, newTitle);
-
-            // Refresh the sidebar in MainActivity
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).updateMenuWithSessions();
-            }
-        }
-        checkCursor.close();
-        db.saveMessage(sessionId, "user", text);
-
 
         // 1. Save & Show User Message
         db.saveMessage(sessionId, "user", text);
@@ -98,14 +85,16 @@ public class ChatFragment extends Fragment {
             @Override
             public void onResult(GeminiService.MoodAnalysis analysis) {
                 if (getActivity() == null) return;
+
                 getActivity().runOnUiThread(() -> {
-                    // Remove typing indicator
+                    // A. Remove typing indicator
                     int index = messageList.indexOf(typingIndicator);
                     if (index != -1) {
                         messageList.remove(index);
                         adapter.notifyItemRemoved(index);
                     }
 
+                    // B. Save AI Response and show it
                     String aiText = analysis.insight + "\n\n" + analysis.advice;
                     db.saveMessage(sessionId, "ai", aiText);
                     db.saveMood(analysis.score);
@@ -113,6 +102,19 @@ public class ChatFragment extends Fragment {
                     messageList.add(new MessageAdapter.Message(aiText, "ai"));
                     adapter.notifyItemInserted(messageList.size() - 1);
                     recyclerView.scrollToPosition(messageList.size() - 1);
+
+                    // C. SMART TITLE LOGIC: If this was the first message, update the sidebar title
+                    android.database.Cursor checkCursor = db.getMessages(sessionId);
+                    // Count is 2 because we have 1 user message and 1 AI message now
+                    if (checkCursor.getCount() <= 2 && analysis.chatTitle != null) {
+                        db.updateSessionTitle(sessionId, analysis.chatTitle);
+
+                        // Refresh the sidebar in MainActivity
+                        if (getActivity() instanceof MainActivity) {
+                            ((MainActivity) getActivity()).updateMenuWithSessions();
+                        }
+                    }
+                    checkCursor.close();
                 });
             }
 
