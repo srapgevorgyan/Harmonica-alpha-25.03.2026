@@ -82,8 +82,8 @@ public class ChatFragment extends Fragment {
         adapter.notifyItemInserted(messageList.size() - 1);
         recyclerView.scrollToPosition(messageList.size() - 1);
 
-        // 3. Get AI Response
-        gemini.analyzeMood(text, new GeminiService.AnalysisCallback() {
+        // 3. Get AI Response with full history context
+        gemini.analyzeMood(messageList, text, new GeminiService.AnalysisCallback() {
             @Override
             public void onResult(GeminiService.MoodAnalysis analysis) {
                 if (getActivity() == null) return;

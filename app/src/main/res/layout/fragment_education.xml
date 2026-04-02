@@ -28,43 +28,78 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardCornerRadius="24dp"
-        app:cardElevation="4dp">
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="@color/white">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="24dp">
+            android:layout_height="wrap_content">
 
-            <TextView
-                android:id="@+id/txtHormoneName"
+            <!-- Added the ProgressBar here to fix your Java error -->
+            <ProgressBar
+                android:id="@+id/progressBarEdu"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Cortisol"
-                android:textColor="@color/harmonica_accent"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:layout_gravity="center"
+                android:visibility="gone"
+                android:indeterminateTint="@color/harmonica_primary" />
 
-            <TextView
-                android:id="@+id/txtHormoneDesc"
+            <LinearLayout
+                android:id="@+id/layoutContentEdu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Known as the 'stress hormone', cortisol helps your body respond to danger but can cause anxiety if levels stay high."
-                android:textColor="@color/harmonica_text"
-                android:textSize="16sp"
-                android:lineSpacingExtra="4dp" />
+                android:orientation="vertical"
+                android:padding="24dp">
 
-            <Button
-                android:id="@+id/btnLearnMore"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="Read Medical Study"
-                android:backgroundTint="@color/harmonica_primary"
-                android:textColor="@color/white"
-                app:cornerRadius="12dp" />
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/txtHormoneType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Mood Stabilizer"
+                    android:textColor="@color/harmonica_hint"
+                    android:textSize="12sp"
+                    android:textAllCaps="true"
+                    android:letterSpacing="0.1"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtHormoneName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Cortisol"
+                    android:textColor="@color/harmonica_accent"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="40dp"
+                    android:layout_height="2dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@color/harmonica_primary" />
+
+                <TextView
+                    android:id="@+id/txtHormoneDesc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Known as the 'stress hormone', cortisol helps your body respond to danger but can cause anxiety if levels stay high."
+                    android:textColor="@color/harmonica_text"
+                    android:textSize="16sp"
+                    android:lineSpacingExtra="6dp" />
+
+                <Button
+                    android:id="@+id/btnLearnMore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:text="Read Scientific Insights"
+                    android:backgroundTint="@color/harmonica_primary"
+                    android:textColor="@color/white"
+                    app:cornerRadius="12dp"
+                    style="@style/Widget.MaterialComponents.Button" />
+            </LinearLayout>
+        </FrameLayout>
     </androidx.cardview.widget.CardView>
 
     <Button
@@ -72,11 +107,20 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:layout_marginTop="32dp"
-        android:text="Discover Another Hormone"
+        android:text="Explore Another Hormone"
         android:backgroundTint="@color/harmonica_bg"
         android:textColor="@color/harmonica_primary"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         app:strokeColor="@color/harmonica_primary"
         app:cornerRadius="30dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Every day, Harmonica picks one hormone for you to learn about. Come back tomorrow for a new one!"
+        android:textColor="@color/harmonica_hint"
+        android:textSize="12sp"
+        android:textAlignment="center" />
 
 </LinearLayout>

@@ -10,7 +10,7 @@ import java.util.List;
 
 public class MoodDatabase extends SQLiteOpenHelper {
     private static final String DB_NAME = "HarmonicaDB";
-    private static final int DB_VERSION = 2; // Incremented version
+    private static final int DB_VERSION = 2;
 
     public MoodDatabase(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -25,12 +25,9 @@ public class MoodDatabase extends SQLiteOpenHelper {
         }
     }
 
-
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE moods (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, score INTEGER)");
-
-        // New Tables for Gemini-style history
         db.execSQL("CREATE TABLE sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, timestamp LONG)");
         db.execSQL("CREATE TABLE messages (id INTEGER PRIMARY KEY AUTOINCREMENT, sessionId INTEGER, sender TEXT, text TEXT, timestamp LONG)");
     }
@@ -43,7 +40,6 @@ public class MoodDatabase extends SQLiteOpenHelper {
         }
     }
 
-    // --- Session Methods ---
     public long createSession(String title) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues v = new ContentValues();
@@ -52,13 +48,11 @@ public class MoodDatabase extends SQLiteOpenHelper {
         return db.insert("sessions", null, v);
     }
 
-
-    // --- Message Methods ---
     public void saveMessage(long sessionId, String sender, String text) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues v = new ContentValues();
         v.put("sessionId", sessionId);
-        v.put("sender", sender); // "user" or "ai"
+        v.put("sender", sender);
         v.put("text", text);
         v.put("timestamp", System.currentTimeMillis());
         db.insert("messages", null, v);
@@ -68,7 +62,6 @@ public class MoodDatabase extends SQLiteOpenHelper {
         return this.getReadableDatabase().rawQuery("SELECT * FROM messages WHERE sessionId = ? ORDER BY timestamp ASC", new String[]{String.valueOf(sessionId)});
     }
 
-    // Keep your old mood methods for the graph...
     public void saveMood(int score) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -77,27 +70,27 @@ public class MoodDatabase extends SQLiteOpenHelper {
         db.insert("moods", null, values);
     }
 
-    public List<MoodEntry> getRecentMoodEntries() {
+
+    public List<MoodEntry> getMonthMoodEntries() {
+        return getMoodEntries(30);
+    }
+
+    private List<MoodEntry> getMoodEntries(int limit) {
         List<MoodEntry> entries = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-
-        // Get the last 7 entries with both score and date
-        Cursor cursor = db.rawQuery("SELECT score, date FROM moods ORDER BY id DESC LIMIT 7", null);
+        Cursor cursor = db.rawQuery("SELECT score, date FROM moods ORDER BY id DESC LIMIT ?", new String[]{String.valueOf(limit)});
 
         if (cursor.moveToFirst()) {
             do {
                 entries.add(new MoodEntry(
                         cursor.getInt(0),
-                        Long.parseLong(cursor.getString(1)) // Parse the timestamp string back to long
+                        Long.parseLong(cursor.getString(1))
                 ));
             } while (cursor.moveToNext());
         }
         cursor.close();
         return entries;
     }
-
-
-    // saved chats logic
 
     public static class SessionHeader {
         public long id;
@@ -110,8 +103,6 @@ public class MoodDatabase extends SQLiteOpenHelper {
     public List<SessionHeader> getCategorizedSessions() {
         List<SessionHeader> headers = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-
-        // This query calculates the category (Today, Yesterday, Previous) based on the timestamp
         String query = "SELECT id, title, timestamp, " +
                 "CASE " +
                 "WHEN date(timestamp/1000, 'unixepoch', 'localtime') = date('now', 'localtime') THEN 'Today' " +
@@ -133,7 +124,6 @@ public class MoodDatabase extends SQLiteOpenHelper {
         return headers;
     }
 
-    // Add this to allow updating the title after the first message
     public void updateSessionTitle(long id, String newTitle) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues v = new ContentValues();

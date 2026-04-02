@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -23,12 +24,15 @@ import java.util.Locale;
 public class StatsFragment extends Fragment {
     private LineChart chart;
     private MoodDatabase db;
+    private TextView txtSummary;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_stats, container, false);
         chart = v.findViewById(R.id.moodChart);
+        // Corrected ID: used R.id.txtSummary which matches fragment_stats.xml
+        txtSummary = v.findViewById(R.id.txtSummary); 
         db = new MoodDatabase(getContext());
 
         setupChart();
@@ -36,63 +40,82 @@ public class StatsFragment extends Fragment {
     }
 
     private void setupChart() {
-        // 1. Get the full entries (score + timestamp)
-        List<MoodDatabase.MoodEntry> entriesData = db.getRecentMoodEntries();
-        if (entriesData.isEmpty()) return;
+        if (getContext() == null) return;
+
+        // 1. Get entries from database (up to 30 for the month)
+        List<MoodDatabase.MoodEntry> entriesData = db.getMonthMoodEntries();
+        if (entriesData.isEmpty()) {
+            if (txtSummary != null) txtSummary.setText("Start chatting to see your mood patterns!");
+            return;
+        }
 
         List<Entry> entries = new ArrayList<>();
         final List<String> labels = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM", Locale.getDefault());
 
+        float totalScore = 0;
         // 2. Prepare data (Reverse because DB returns newest first, but chart goes left-to-right)
         for (int i = 0; i < entriesData.size(); i++) {
             MoodDatabase.MoodEntry entry = entriesData.get(entriesData.size() - 1 - i);
-            entries.add(new Entry(i, entry.score));
+            entries.add(new Entry(i, (float) entry.score));
             labels.add(sdf.format(new Date(entry.timestamp)));
+            totalScore += entry.score;
         }
 
-        int primaryColor = getResources().getColor(R.color.harmonica_primary, null);
-        int accentColor = getResources().getColor(R.color.harmonica_accent, null);
+        // 3. Set summary text with mood insight
+        if (txtSummary != null) {
+            float avg = totalScore / entriesData.size();
+            String insight = getMoodInsight(avg);
+            txtSummary.setText(String.format(Locale.getDefault(), "Average Mood: %.1f/10\n\n%s", avg, insight));
+        }
 
-        // 3. Style the Line
+        // 4. Chart Styling
+        int primaryColor = Color.parseColor("#9C27B0"); // harmonica_primary
+        int accentColor = Color.parseColor("#FF4081");  // harmonica_accent
+
         LineDataSet dataSet = new LineDataSet(entries, "Mood Intensity");
         dataSet.setColor(primaryColor);
         dataSet.setCircleColor(accentColor);
         dataSet.setLineWidth(3f);
+        dataSet.setCircleRadius(4f);
         dataSet.setDrawValues(false);
-        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER); // Smooth curve
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
         dataSet.setDrawFilled(true);
-        dataSet.setFillAlpha(30);
+        dataSet.setFillAlpha(40);
         dataSet.setFillColor(primaryColor);
 
         LineData lineData = new LineData(dataSet);
         chart.setData(lineData);
 
-        // 4. Configure X-Axis (The Time Labels)
+        // 5. Axis Configuration
         XAxis xAxis = chart.getXAxis();
-        xAxis.setEnabled(true); // Enable it!
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(false);
         xAxis.setGranularity(1f);
-        xAxis.setTextColor(Color.GRAY);
+        xAxis.setLabelCount(Math.min(entriesData.size(), 5));
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
                 int index = (int) value;
-                if (index >= 0 && index < labels.size()) {
-                    return labels.get(index);
-                }
-                return "";
+                return (index >= 0 && index < labels.size()) ? labels.get(index) : "";
             }
         });
 
-        // 5. General Chart Styling
         chart.getDescription().setEnabled(false);
         chart.getLegend().setEnabled(false);
-        chart.getAxisRight().setEnabled(false); // Hide right axis for cleaner look
-        chart.getAxisLeft().setGridColor(Color.LTGRAY);
+        chart.getAxisRight().setEnabled(false);
+        chart.getAxisLeft().setAxisMaximum(10.5f);
+        chart.getAxisLeft().setAxisMinimum(0f);
+        xAxis.setYOffset(10f);
 
-        chart.animateY(1000); // Nice entrance animation
-        chart.invalidate(); // Refresh
+        chart.animateY(1200);
+        chart.invalidate();
+    }
+
+    private String getMoodInsight(float avg) {
+        if (avg >= 8) return "You've been feeling great lately! Your hormones seem balanced and your mindset is positive.";
+        if (avg >= 6) return "You're doing well. Maintain your current healthy habits to keep your mood stable.";
+        if (avg >= 4) return "You're in a bit of a neutral zone. Consider if stress or lack of sleep might be affecting your baseline.";
+        return "It looks like you've had a tough month. Remember to be kind to yourself and speak with Dr. Harmonica for support.";
     }
 }

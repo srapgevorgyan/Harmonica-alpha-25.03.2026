@@ -10,13 +10,15 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import org.json.JSONObject; // Standard Android JSON library
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 
 public class GeminiService {
     private final GenerativeModelFutures model;
+    private final String API_KEY = "AIzaSyCpC-ddcHi_ck21JI2i0lG55X93JMotczU";
 
     public static class MoodAnalysis {
         public int score = 5;
@@ -26,15 +28,26 @@ public class GeminiService {
         public String chatTitle = "New Conversation";
     }
 
+    public static class HormoneEducation {
+        public String name;
+        public String type;
+        public String description;
+        public String url;
+    }
+
     public interface AnalysisCallback {
         void onResult(MoodAnalysis analysis);
         void onError(String message);
     }
 
+    public interface HormoneCallback {
+        void onResult(HormoneEducation hormone);
+        void onError(String message);
+    }
+
     public GeminiService() {
         GenerationConfig.Builder configBuilder = new GenerationConfig.Builder();
-        configBuilder.temperature = 0.75f;
-        // Force JSON response if the model supports it
+        configBuilder.temperature = 1.0f;
         configBuilder.responseMimeType = "application/json";
         GenerationConfig config = configBuilder.build();
 
@@ -42,7 +55,7 @@ public class GeminiService {
 
         GenerativeModel baseModel = new GenerativeModel(
                 "gemini-2.5-flash",
-                "AIzaSyDVrv_c68MWNuUabFBnIP4uhmoBKMRuHDE",
+                API_KEY,
                 config,
                 new ArrayList<>(),
                 requestOptions
@@ -51,27 +64,31 @@ public class GeminiService {
         this.model = GenerativeModelFutures.from(baseModel);
     }
 
-    public void analyzeMood(String userText, AnalysisCallback callback) {
+    public void analyzeMood(List<MessageAdapter.Message> history, String userText, AnalysisCallback callback) {
         android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
-        String systemPrompt = "You are Dr. Harmonica, a world-class psychologist. " +
-                "Analyze the user's mood and hormonal triggers. " +
-                "IMPORTANT: You MUST respond ONLY with a valid JSON object. " +
-                "JSON Schema: " +
-                "{ \"score\": number, \"label\": string, \"insight\": string, \"advice\": string, \"chatTitle\": string }";
+        StringBuilder promptBuilder = new StringBuilder();
+        promptBuilder.append("You are Dr. Harmonica, a psychological assistant and hormonal health expert. ")
+                .append("Analyze the conversation history and the latest message. ")
+                .append("Provide empathetic insights and actionable advice focused on hormonal balance.\n\n")
+                .append("RESPOND ONLY IN JSON matching this schema:\n")
+                .append("{ \"score\": number, \"label\": string, \"insight\": string, \"advice\": string, \"chatTitle\": string }\n\n")
+                .append("HISTORY:\n");
 
-        Content content = new Content.Builder()
-                .addText(systemPrompt + "\n\nUser: " + userText)
-                .build();
+        for (MessageAdapter.Message msg : history) {
+            if (msg.isTyping) continue;
+            String role = msg.sender.equals("user") ? "User" : "Assistant";
+            promptBuilder.append(role).append(": ").append(msg.text).append("\n");
+        }
+        promptBuilder.append("User (Latest): ").append(userText);
 
+        Content content = new Content.Builder().addText(promptBuilder.toString()).build();
         ListenableFuture<GenerateContentResponse> response = model.generateContent(content);
 
         Futures.addCallback(response, new FutureCallback<GenerateContentResponse>() {
             @Override
             public void onSuccess(GenerateContentResponse result) {
-                String rawText = result.getText();
-                MoodAnalysis analysis = parseResponse(rawText);
-                mainHandler.post(() -> callback.onResult(analysis));
+                mainHandler.post(() -> callback.onResult(parseMoodResponse(result.getText())));
             }
 
             @Override
@@ -81,32 +98,77 @@ public class GeminiService {
         }, Executors.newSingleThreadExecutor());
     }
 
-    private MoodAnalysis parseResponse(String raw) {
-        MoodAnalysis m = new MoodAnalysis();
-        if (raw == null || raw.isEmpty()) return m;
+    public void getRandomHormone(List<String> excludeList, HormoneCallback callback) {
+        android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
-        try {
-            // Clean the string (sometimes Gemini wraps JSON in markdown ```json blocks)
-            String jsonStr = raw.trim();
-            if (jsonStr.startsWith("```json")) {
-                jsonStr = jsonStr.substring(7, jsonStr.length() - 3).trim();
-            } else if (jsonStr.startsWith("```")) {
-                jsonStr = jsonStr.substring(3, jsonStr.length() - 3).trim();
+        StringBuilder promptBuilder = new StringBuilder();
+        promptBuilder.append("Pick a random hormone or neurochemical. ")
+                .append("Be creative and pick something unique like Irisin, Ghrelin, Leptin, Melatonin, Cortisol, Prolactin, Vasopressin, or Adrenaline. ");
+        
+        if (excludeList != null && !excludeList.isEmpty()) {
+            promptBuilder.append("CRITICAL: Do NOT pick any of the following recently shown hormones: ")
+                    .append(String.join(", ", excludeList))
+                    .append(". ");
+        }
+
+        promptBuilder.append("Provide its name, a category (type), a clear 2-3 sentence description of how it affects mood or health, ")
+                .append("and a link to a medical source like Mayo Clinic or Healthline. ")
+                .append("RESPOND ONLY IN JSON: { \"name\": string, \"type\": string, \"description\": string, \"url\": string }");
+
+        Content content = new Content.Builder().addText(promptBuilder.toString()).build();
+        ListenableFuture<GenerateContentResponse> response = model.generateContent(content);
+
+        Futures.addCallback(response, new FutureCallback<GenerateContentResponse>() {
+            @Override
+            public void onSuccess(GenerateContentResponse result) {
+                mainHandler.post(() -> callback.onResult(parseHormoneResponse(result.getText())));
             }
 
-            JSONObject json = new JSONObject(jsonStr);
+            @Override
+            public void onFailure(Throwable t) {
+                mainHandler.post(() -> callback.onError(t.getMessage()));
+            }
+        }, Executors.newSingleThreadExecutor());
+    }
 
+    private MoodAnalysis parseMoodResponse(String raw) {
+        MoodAnalysis m = new MoodAnalysis();
+        try {
+            JSONObject json = new JSONObject(cleanJson(raw));
             m.score = json.optInt("score", 5);
             m.label = json.optString("label", "Neutral");
             m.insight = json.optString("insight", "");
             m.advice = json.optString("advice", "");
-            m.chatTitle = json.optString("chatTitle", "New Conversation");
-
+            m.chatTitle = json.optString("chatTitle", "New Topic");
         } catch (Exception e) {
-            // Fallback: If JSON parsing fails, put the raw text in the insight
-            m.insight = raw;
-            m.advice = "I'm processing your thoughts. Tell me more.";
+            m.insight = (raw != null) ? raw : "Error parsing response.";
         }
         return m;
+    }
+
+    private HormoneEducation parseHormoneResponse(String raw) {
+        HormoneEducation h = new HormoneEducation();
+        try {
+            JSONObject json = new JSONObject(cleanJson(raw));
+            h.name = json.optString("name", "Unknown Hormone");
+            h.type = json.optString("type", "General Health");
+            h.description = json.optString("description", "A key chemical in the body.");
+            h.url = json.optString("url", "https://www.healthline.com");
+        } catch (Exception e) {
+            h.name = "Error loading";
+            h.description = "Could not parse AI response.";
+        }
+        return h;
+    }
+
+    private String cleanJson(String raw) {
+        if (raw == null) return "{}";
+        String clean = raw.trim();
+        int start = clean.indexOf("{");
+        int end = clean.lastIndexOf("}");
+        if (start != -1 && end != -1 && end > start) {
+            return clean.substring(start, end + 1);
+        }
+        return clean;
     }
 }
