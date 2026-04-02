@@ -1,28 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/harmonica_bg">
 
-    <!-- 1. The Chat List -->
+    <!-- 1. The Welcome UI (Visible when chat is empty) -->
+    <LinearLayout
+        android:id="@+id/layoutWelcome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp"
+        app:layout_constraintBottom_toTopOf="@+id/txtDisclaimer"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@mipmap/ic_launcher_round"
+            android:alpha="0.8" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="serif"
+            android:text="Welcome to Harmonica"
+            android:textColor="@color/harmonica_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="260dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="Your safe space for emotional and hormonal wellness. How are you feeling today?"
+            android:textColor="@color/harmonica_hint"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- 2. The Chat List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatRecyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
         android:paddingTop="16dp"
-        android:paddingBottom="100dp"
+        android:paddingBottom="16dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/txtDisclaimer"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
-    <!-- 2. The Floating Input Bar -->
+    <!-- 3. AI Disclaimer -->
+    <TextView
+        android:id="@+id/txtDisclaimer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:alpha="0.6"
+        android:text="Harmonica AI can make mistakes. Consider checking important info."
+        android:textColor="@color/harmonica_hint"
+        android:textSize="10sp"
+        app:layout_constraintBottom_toTopOf="@+id/layout_input_container"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <!-- 4. The Floating Input Bar -->
     <LinearLayout
         android:id="@+id/layout_input_container"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
+        android:layout_margin="16dp"
         android:background="@drawable/bg_input_bar"
         android:elevation="6dp"
         android:gravity="center_vertical"
@@ -37,8 +91,8 @@
             android:layout_height="42dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:padding="10dp"
-            android:src="@drawable/ic_add"
-            app:tint="@color/harmonica_olive" />
+            android:src="@drawable/ic_chat_bubble"
+            app:tint="@color/harmonica_primary" />
 
         <EditText
             android:id="@+id/editMoodInput"
@@ -46,17 +100,17 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/transparent"
-            android:hint="Talk to Dr. Harmonica..."
+            android:hint="Message Dr. Harmonica..."
             android:padding="12dp"
-            android:textColor="@color/harmonica_text_main"
-            android:textColorHint="@color/harmonica_text_sub"
+            android:textColor="@color/harmonica_text"
+            android:textColorHint="@color/harmonica_hint"
             android:textSize="15sp" />
 
         <ImageButton
             android:id="@+id/btnSend"
             android:layout_width="44dp"
             android:layout_height="44dp"
-            android:background="@drawable/bg_send_button"
+            android:background="@drawable/bg_bubble_ai"
             android:elevation="2dp"
             android:padding="12dp"
             android:src="@android:drawable/ic_menu_send"

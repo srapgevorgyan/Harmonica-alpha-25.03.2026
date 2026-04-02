@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,6 +24,7 @@ public class ChatFragment extends Fragment {
     private MoodDatabase db;
     private long sessionId = -1;
     private GeminiService gemini;
+    private LinearLayout layoutWelcome;
 
     @Nullable
     @Override
@@ -40,6 +42,7 @@ public class ChatFragment extends Fragment {
         recyclerView = v.findViewById(R.id.chatRecyclerView);
         editInput = v.findViewById(R.id.editMoodInput);
         ImageButton btnSend = v.findViewById(R.id.btnSend);
+        layoutWelcome = v.findViewById(R.id.layoutWelcome);
 
         adapter = new MessageAdapter(messageList);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -52,6 +55,12 @@ public class ChatFragment extends Fragment {
 
     }
 
+    private void updateWelcomeVisibility() {
+        if (layoutWelcome != null) {
+            layoutWelcome.setVisibility(messageList.isEmpty() ? View.VISIBLE : View.GONE);
+        }
+    }
+
     private void loadHistory() {
         android.database.Cursor cursor = db.getMessages(sessionId);
         messageList.clear();
@@ -62,6 +71,7 @@ public class ChatFragment extends Fragment {
         }
         cursor.close();
         adapter.notifyDataSetChanged();
+        updateWelcomeVisibility();
         if (messageList.size() > 0) recyclerView.scrollToPosition(messageList.size() - 1);
     }
 
@@ -75,6 +85,7 @@ public class ChatFragment extends Fragment {
         adapter.notifyItemInserted(messageList.size() - 1);
         recyclerView.scrollToPosition(messageList.size() - 1);
         editInput.setText("");
+        updateWelcomeVisibility();
 
         // 2. Show Typing Indicator
         MessageAdapter.Message typingIndicator = MessageAdapter.Message.typing();

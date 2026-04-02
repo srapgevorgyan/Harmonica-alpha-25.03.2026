@@ -70,6 +70,9 @@ public class MoodDatabase extends SQLiteOpenHelper {
         db.insert("moods", null, values);
     }
 
+    public List<MoodEntry> getRecentMoodEntries() {
+        return getMoodEntries(7);
+    }
 
     public List<MoodEntry> getMonthMoodEntries() {
         return getMoodEntries(30);
@@ -103,12 +106,16 @@ public class MoodDatabase extends SQLiteOpenHelper {
     public List<SessionHeader> getCategorizedSessions() {
         List<SessionHeader> headers = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT id, title, timestamp, " +
+        
+        // Modified query to only return sessions that have at least one message
+        String query = "SELECT s.id, s.title, s.timestamp, " +
                 "CASE " +
-                "WHEN date(timestamp/1000, 'unixepoch', 'localtime') = date('now', 'localtime') THEN 'Today' " +
-                "WHEN date(timestamp/1000, 'unixepoch', 'localtime') = date('now', 'localtime', '-1 day') THEN 'Yesterday' " +
+                "WHEN date(s.timestamp/1000, 'unixepoch', 'localtime') = date('now', 'localtime') THEN 'Today' " +
+                "WHEN date(s.timestamp/1000, 'unixepoch', 'localtime') = date('now', 'localtime', '-1 day') THEN 'Yesterday' " +
                 "ELSE 'Previous' END as category " +
-                "FROM sessions ORDER BY timestamp DESC";
+                "FROM sessions s " +
+                "WHERE EXISTS (SELECT 1 FROM messages m WHERE m.sessionId = s.id) " +
+                "ORDER BY s.timestamp DESC";
 
         Cursor cursor = db.rawQuery(query, null);
         if (cursor.moveToFirst()) {

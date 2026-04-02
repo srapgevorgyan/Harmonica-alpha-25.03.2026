@@ -1,44 +1,44 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="160dp"
+    android:layout_height="wrap_content"
     android:background="@color/harmonica_bg"
+    android:orientation="vertical"
     android:padding="24dp">
 
     <ImageView
         android:id="@+id/logo_box"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:background="@drawable/bg_sidebar_active"
-        android:padding="12dp"
+        android:padding="16dp"
         android:src="@drawable/ic_heart"
-        app:tint="@color/white"
-        android:layout_marginTop="28dp"
-        />
+        app:tint="@color/white" />
 
-    <LinearLayout
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_marginStart="10dp"
-        android:layout_toEndOf="@id/logo_box"
-        android:orientation="vertical">
+        android:layout_marginTop="16dp"
+        android:fontFamily="serif"
+        android:text="Harmonica"
+        android:textColor="@color/harmonica_primary"
+        android:textSize="22sp"
+        android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Harmonica"
-            android:textColor="#1A1A1A"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:letterSpacing="0.1"
+        android:text="WELLNESS ASSISTANT"
+        android:textColor="@color/harmonica_hint"
+        android:textSize="10sp"
+        android:textStyle="bold" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:letterSpacing="0.1"
-            android:text="WELLNESS\nASSISTANT"
-            android:textColor="@color/harmonica_text_sub"
-            android:textSize="10sp" />
-    </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="24dp"
+        android:background="#E0E0E0" />
 
-</RelativeLayout>
+</LinearLayout>
