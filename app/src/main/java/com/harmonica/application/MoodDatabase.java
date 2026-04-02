@@ -49,6 +49,7 @@ public class MoodDatabase extends SQLiteOpenHelper {
     }
 
     public void saveMessage(long sessionId, String sender, String text) {
+        if (sessionId == -2) return; // -2 is reserved for Incognito Mode
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues v = new ContentValues();
         v.put("sessionId", sessionId);
@@ -107,7 +108,6 @@ public class MoodDatabase extends SQLiteOpenHelper {
         List<SessionHeader> headers = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         
-        // Modified query to only return sessions that have at least one message
         String query = "SELECT s.id, s.title, s.timestamp, " +
                 "CASE " +
                 "WHEN date(s.timestamp/1000, 'unixepoch', 'localtime') = date('now', 'localtime') THEN 'Today' " +
@@ -136,5 +136,11 @@ public class MoodDatabase extends SQLiteOpenHelper {
         ContentValues v = new ContentValues();
         v.put("title", newTitle);
         db.update("sessions", v, "id = ?", new String[]{String.valueOf(id)});
+    }
+
+    public void deleteSession(long id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete("messages", "sessionId = ?", new String[]{String.valueOf(id)});
+        db.delete("sessions", "id = ?", new String[]{String.valueOf(id)});
     }
 }

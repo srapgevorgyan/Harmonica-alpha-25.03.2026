@@ -4,16 +4,20 @@
     <color name="white">#FFFFFFFF</color>
 
     <color name="harmonica_primary">#5A5A40</color>    <!-- Deep Olive -->
-      <!-- Warm Paper -->
     <color name="harmonica_accent">#FF6321</color>     <!-- Soft Sunset -->
     <color name="harmonica_card">#FFFFFF</color>       <!-- Pure White -->
     <color name="harmonica_text">#2D2D2D</color>       <!-- Soft Black -->
     <color name="harmonica_hint">#8E8E8E</color>       <!-- Muted Gray -->
-
 
     <color name="harmonica_bg">#F8F7F2</color> <!-- Warm cream background -->
     <color name="harmonica_olive">#5A5A40</color> <!-- The dark olive green -->
     <color name="harmonica_text_main">#1A1A1A</color>
     <color name="harmonica_text_sub">#707060</color>
     <color name="harmonica_white">#FFFFFF</color>
+
+    <!-- Incognito Mode Colors -->
+    <color name="incognito_bg">#121212</color>
+    <color name="incognito_primary">#90CAF9</color>
+    <color name="incognito_text">#E0E0E0</color>
+    <color name="incognito_hint">#757575</color>
 </resources>

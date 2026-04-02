@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 
 public class GeminiService {
     private final GenerativeModelFutures model;
-    private final String API_KEY = "AIzaSyCpC-ddcHi_ck21JI2i0lG55X93JMotczU";
+    private final String API_KEY = "AIzaSyDDLDPW10F60oAfc5AFMYdDbGlkYH0Wa7o";
 
     public static class MoodAnalysis {
         public int score = 5;

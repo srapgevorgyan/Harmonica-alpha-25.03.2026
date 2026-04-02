@@ -3,15 +3,28 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_chat"
-            android:icon="@android:drawable/ic_menu_send"
+            android:icon="@drawable/ic_chat_bubble"
             android:title="Safe Space (Chat)" />
         <item
+            android:id="@+id/nav_incognito"
+            android:icon="@drawable/ic_close"
+            android:title="Incognito Space" />
+        <item
             android:id="@+id/nav_stats"
-            android:icon="@android:drawable/ic_menu_sort_by_size"
+            android:icon="@drawable/ic_calendar"
             android:title="Monthly Recap" />
         <item
             android:id="@+id/nav_edu"
             android:icon="@android:drawable/ic_menu_info_details"
             android:title="Hormonal Education" />
     </group>
+
+    <item android:title="History Management">
+        <menu>
+            <item
+                android:id="@+id/nav_manage"
+                android:icon="@android:drawable/ic_menu_delete"
+                android:title="Clean Up Conversations" />
+        </menu>
+    </item>
 </menu>
