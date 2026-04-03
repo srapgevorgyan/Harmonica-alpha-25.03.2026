@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 
 public class GeminiService {
     private final GenerativeModelFutures model;
-    private final String API_KEY = "AIzaSyDDLDPW10F60oAfc5AFMYdDbGlkYH0Wa7o";
+    private final String API_KEY = "AIzaSyBSI1rHTjJC50kzNtE245lcYbmpinPpYmY";
 
     public static class MoodAnalysis {
         public int score = 5;
@@ -102,18 +102,13 @@ public class GeminiService {
         android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
         StringBuilder promptBuilder = new StringBuilder();
-        promptBuilder.append("Pick a random hormone or neurochemical. ")
-                .append("Be creative and pick something unique like Irisin, Ghrelin, Leptin, Melatonin, Cortisol, Prolactin, Vasopressin, or Adrenaline. ");
-        
-        if (excludeList != null && !excludeList.isEmpty()) {
-            promptBuilder.append("CRITICAL: Do NOT pick any of the following recently shown hormones: ")
-                    .append(String.join(", ", excludeList))
-                    .append(". ");
-        }
-
-        promptBuilder.append("Provide its name, a category (type), a clear 2-3 sentence description of how it affects mood or health, ")
-                .append("and a link to a medical source like Mayo Clinic or Healthline. ")
-                .append("RESPOND ONLY IN JSON: { \"name\": string, \"type\": string, \"description\": string, \"url\": string }");
+        promptBuilder.append("Pick a random hormone or neurochemical. Be creative and pick something unique. ")
+                .append("CRITICAL: Do NOT pick any of the following recently shown: ")
+                .append(String.join(", ", excludeList)).append(". ")
+                .append("\n\nFor the 'url' field, provide a RELIABLE search link to Mayo Clinic or Healthline. ")
+                .append("Example format: https://www.mayoclinic.org/search/search-results?q=hormone_name ")
+                .append("or https://www.healthline.com/search?q1=hormone_name. ")
+                .append("\n\nRESPOND ONLY IN JSON: { \"name\": string, \"type\": string, \"description\": string, \"url\": string }");
 
         Content content = new Content.Builder().addText(promptBuilder.toString()).build();
         ListenableFuture<GenerateContentResponse> response = model.generateContent(content);

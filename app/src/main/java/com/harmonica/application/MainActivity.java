@@ -2,15 +2,18 @@ package com.harmonica.application;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.MenuItem;
+import android.view.View;
 import android.view.Window;
-import android.widget.Toast;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.navigation.NavigationView;
@@ -67,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
                     Bundle b = new Bundle();
                     b.putLong("sessionId", -2); // Incognito session
                     selectedFragment.setArguments(b);
-                    // UI handled by ChatFragment calling setIncognitoMode(true)
                 } else if (id == R.id.nav_stats) {
                     selectedFragment = new StatsFragment();
                 } else if (id == R.id.nav_edu) {
@@ -107,20 +109,29 @@ public class MainActivity extends AppCompatActivity {
         Window window = getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         
+        WindowInsetsControllerCompat insetsController = new WindowInsetsControllerCompat(window, window.getDecorView());
+
         if (isIncognito) {
             customToolbar.setBackgroundColor(Color.parseColor("#121212"));
             toolbarTitle.setTextColor(Color.parseColor("#90CAF9"));
             toolbarTitle.setText("Incognito Space");
             btnMenu.setColorFilter(Color.parseColor("#90CAF9"));
+            
             window.setStatusBarColor(Color.parseColor("#121212"));
+            insetsController.setAppearanceLightStatusBars(false); // Light icons on dark background
+            
             drawerLayout.setBackgroundColor(Color.parseColor("#121212"));
         } else {
-            customToolbar.setBackgroundColor(ContextCompat.getColor(this, R.color.harmonica_bg));
+            int bgColor = ContextCompat.getColor(this, R.color.harmonica_bg);
+            customToolbar.setBackgroundColor(bgColor);
             toolbarTitle.setTextColor(ContextCompat.getColor(this, R.color.harmonica_primary));
             toolbarTitle.setText("Harmonica");
             btnMenu.setColorFilter(ContextCompat.getColor(this, R.color.harmonica_primary));
-            window.setStatusBarColor(ContextCompat.getColor(this, R.color.harmonica_bg));
-            drawerLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.harmonica_bg));
+            
+            window.setStatusBarColor(bgColor);
+            insetsController.setAppearanceLightStatusBars(true); // Dark icons on light background
+            
+            drawerLayout.setBackgroundColor(bgColor);
         }
     }
 

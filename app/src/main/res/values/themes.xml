@@ -4,22 +4,28 @@
         <item name="android:windowFullscreen">false</item>
         <item name="android:windowTranslucentStatus">false</item>
         <item name="android:windowTranslucentNavigation">false</item>
+        
+        <!-- Fix for the purple status bar -->
+        <item name="android:statusBarColor">@color/harmonica_bg</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+        
+        <!-- Overriding Material3 defaults to prevent purple -->
+        <item name="colorPrimary">@color/harmonica_primary</item>
+        <item name="colorSecondary">@color/harmonica_olive</item>
+        <item name="android:windowBackground">@color/harmonica_bg</item>
     </style>
+    
     <style name="ShapeAppearance.Harmonica.Pill" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">16dp</item>
     </style>
+    
     <style name="Theme.Harmonica" parent="Base.Theme.Harmonica" />
+    
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
-        <!-- The background color of the splash screen -->
         <item name="windowSplashScreenBackground">@color/harmonica_bg</item>
-
-        <!-- The icon in the center (your logo) -->
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
-
         <item name="windowSplashScreenAnimationDuration">1000</item>
-
-        <!-- The theme to switch to after the splash is done -->
         <item name="postSplashScreenTheme">@style/Theme.Harmonica</item>
     </style>
 </resources>
