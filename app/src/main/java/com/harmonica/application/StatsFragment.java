@@ -15,6 +15,8 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,7 +33,6 @@ public class StatsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_stats, container, false);
         chart = v.findViewById(R.id.moodChart);
-        // Corrected ID: used R.id.txtSummary which matches fragment_stats.xml
         txtSummary = v.findViewById(R.id.txtSummary); 
         db = new MoodDatabase(getContext());
 
@@ -42,10 +43,15 @@ public class StatsFragment extends Fragment {
     private void setupChart() {
         if (getContext() == null) return;
 
-        // 1. Get entries from database (up to 30 for the month)
-        List<MoodDatabase.MoodEntry> entriesData = db.getMonthMoodEntries();
+        // Get current user ID to fetch private data
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        String uid = (user != null) ? user.getUid() : null;
+
+        // 1. Get entries from database linked to this specific user
+        List<MoodDatabase.MoodEntry> entriesData = db.getMonthMoodEntries(uid);
         if (entriesData.isEmpty()) {
-            if (txtSummary != null) txtSummary.setText("Start chatting to see your mood patterns!");
+            if (txtSummary != null) txtSummary.setText("Start chatting to see your private mood patterns!");
+            chart.clear();
             return;
         }
 
@@ -54,7 +60,7 @@ public class StatsFragment extends Fragment {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM", Locale.getDefault());
 
         float totalScore = 0;
-        // 2. Prepare data (Reverse because DB returns newest first, but chart goes left-to-right)
+        // 2. Prepare data (Reverse because DB returns newest first)
         for (int i = 0; i < entriesData.size(); i++) {
             MoodDatabase.MoodEntry entry = entriesData.get(entriesData.size() - 1 - i);
             entries.add(new Entry(i, (float) entry.score));
@@ -70,8 +76,8 @@ public class StatsFragment extends Fragment {
         }
 
         // 4. Chart Styling
-        int primaryColor = Color.parseColor("#9C27B0"); // harmonica_primary
-        int accentColor = Color.parseColor("#FF4081");  // harmonica_accent
+        int primaryColor = Color.parseColor("#9C27B0"); 
+        int accentColor = Color.parseColor("#FF4081");  
 
         LineDataSet dataSet = new LineDataSet(entries, "Mood Intensity");
         dataSet.setColor(primaryColor);

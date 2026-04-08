@@ -2,7 +2,6 @@ package com.harmonica.application;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -17,6 +16,8 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView toolbarTitle;
     private ImageButton btnMenu;
     private boolean isIncognitoGlobal = false;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mAuth = FirebaseAuth.getInstance();
 
         // UI Components
         drawerLayout = findViewById(R.id.drawer_layout);
@@ -58,6 +61,16 @@ public class MainActivity extends AppCompatActivity {
 
             if (id == R.id.nav_manage) {
                 showMultiDeleteDialog();
+            }
+            else if (id == R.id.nav_profile) {
+                selectedFragment = new AuthFragment();
+            }
+            else if (id == R.id.nav_signout) {
+                mAuth.signOut();
+                Toast.makeText(this, "Signed out successfully", Toast.LENGTH_SHORT).show();
+                updateMenuWithSessions(); // Clear sidebar
+                loadFragment(new AuthFragment());
+                customToolbar.setVisibility(View.GONE);
             }
             else if (item.getGroupId() == 2) {
                 showChatOptionsDialog(item.getItemId(), item.getTitle().toString());
@@ -83,9 +96,15 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
+        // 4. Startup logic: Show Auth if not logged in, otherwise Chat
         if (savedInstanceState == null) {
-            loadFragment(new ChatFragment());
-            navigationView.setCheckedItem(R.id.nav_chat);
+            if (mAuth.getCurrentUser() == null) {
+                loadFragment(new AuthFragment());
+                customToolbar.setVisibility(View.GONE);
+            } else {
+                loadFragment(new ChatFragment());
+                navigationView.setCheckedItem(R.id.nav_chat);
+            }
         }
 
         getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
@@ -104,6 +123,15 @@ public class MainActivity extends AppCompatActivity {
         updateMenuWithSessions();
     }
 
+    public void onAuthFinished() {
+        customToolbar.setVisibility(View.VISIBLE);
+        updateMenuWithSessions(); // Refresh sidebar for the logged-in user
+        loadFragment(new ChatFragment());
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setCheckedItem(R.id.nav_chat);
+        Toast.makeText(this, "Welcome to Harmonica!", Toast.LENGTH_SHORT).show();
+    }
+
     public void setIncognitoMode(boolean isIncognito) {
         this.isIncognitoGlobal = isIncognito;
         Window window = getWindow();
@@ -118,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
             btnMenu.setColorFilter(Color.parseColor("#90CAF9"));
             
             window.setStatusBarColor(Color.parseColor("#121212"));
-            insetsController.setAppearanceLightStatusBars(false); // Light icons on dark background
+            insetsController.setAppearanceLightStatusBars(false); 
             
             drawerLayout.setBackgroundColor(Color.parseColor("#121212"));
         } else {
@@ -129,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
             btnMenu.setColorFilter(ContextCompat.getColor(this, R.color.harmonica_primary));
             
             window.setStatusBarColor(bgColor);
-            insetsController.setAppearanceLightStatusBars(true); // Dark icons on light background
+            insetsController.setAppearanceLightStatusBars(true);
             
             drawerLayout.setBackgroundColor(bgColor);
         }
@@ -137,7 +165,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void showMultiDeleteDialog() {
         MoodDatabase db = new MoodDatabase(this);
-        List<MoodDatabase.SessionHeader> sessions = db.getCategorizedSessions();
+        FirebaseUser user = mAuth.getCurrentUser();
+        String uid = (user != null) ? user.getUid() : null;
+        
+        List<MoodDatabase.SessionHeader> sessions = db.getCategorizedSessions(uid);
         if (sessions.isEmpty()) {
             Toast.makeText(this, "No saved chats to clean up.", Toast.LENGTH_SHORT).show();
             return;
@@ -200,8 +231,11 @@ public class MainActivity extends AppCompatActivity {
         android.view.Menu menu = navView.getMenu();
         menu.removeGroup(2);
 
+        FirebaseUser user = mAuth.getCurrentUser();
+        String uid = (user != null) ? user.getUid() : null;
+
         MoodDatabase db = new MoodDatabase(this);
-        List<MoodDatabase.SessionHeader> sessions = db.getCategorizedSessions();
+        List<MoodDatabase.SessionHeader> sessions = db.getCategorizedSessions(uid);
 
         android.view.SubMenu todaySub = null;
         android.view.SubMenu yesterdaySub = null;

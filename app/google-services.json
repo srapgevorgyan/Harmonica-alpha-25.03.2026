@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "369981916912",
+    "project_id": "harmonica-5d34d",
+    "storage_bucket": "harmonica-5d34d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:369981916912:android:d4abf1165889f28636a435",
+        "android_client_info": {
+          "package_name": "com.harmonica.application"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "369981916912-8ut1eqemthnu9l0dhsac2opjm4rgelec.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7h4iyyX9Jpww_XU9JkvxYEtmqkH-eN8M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "369981916912-8ut1eqemthnu9l0dhsac2opjm4rgelec.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

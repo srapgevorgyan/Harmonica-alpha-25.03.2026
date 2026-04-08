@@ -19,6 +19,19 @@
             android:title="Hormonal Education" />
     </group>
 
+    <item android:title="Account">
+        <menu>
+            <item
+                android:id="@+id/nav_profile"
+                android:icon="@android:drawable/ic_menu_myplaces"
+                android:title="My Account" />
+            <item
+                android:id="@+id/nav_signout"
+                android:icon="@android:drawable/ic_lock_power_off"
+                android:title="Sign Out" />
+        </menu>
+    </item>
+
     <item android:title="History Management">
         <menu>
             <item

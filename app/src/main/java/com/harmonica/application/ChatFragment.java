@@ -17,6 +17,8 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +33,7 @@ public class ChatFragment extends Fragment {
     private LinearLayout layoutWelcome;
     private ImageButton btnSend;
     private View root;
+    private String currentUserId;
 
     @Nullable
     @Override
@@ -40,10 +43,13 @@ public class ChatFragment extends Fragment {
 
         db = new MoodDatabase(getContext());
         gemini = new GeminiService();
+        
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        currentUserId = (user != null) ? user.getUid() : null;
 
-        // Retrieve sessionId from arguments or create a temporary one
+        // Retrieve sessionId from arguments or create a temporary one linked to user
         if (getArguments() != null) sessionId = getArguments().getLong("sessionId", -1);
-        if (sessionId == -1) sessionId = db.createSession("New Conversation...");
+        if (sessionId == -1) sessionId = db.createSession("New Conversation...", currentUserId);
 
         recyclerView = root.findViewById(R.id.chatRecyclerView);
         editInput = root.findViewById(R.id.editMoodInput);
@@ -81,11 +87,9 @@ public class ChatFragment extends Fragment {
             editInput.setTextColor(ContextCompat.getColor(getContext(), R.color.incognito_text));
             editInput.setHintTextColor(ContextCompat.getColor(getContext(), R.color.incognito_hint));
             
-            // Fix Send Button for Incognito
             btnSend.getBackground().setColorFilter(ContextCompat.getColor(getContext(), R.color.incognito_primary), PorterDuff.Mode.SRC_IN);
             btnSend.setColorFilter(Color.BLACK, PorterDuff.Mode.SRC_IN);
 
-            // Update Welcome Text for Incognito
             if (layoutWelcome != null) {
                 TextView title = (TextView) layoutWelcome.getChildAt(1);
                 TextView sub = (TextView) layoutWelcome.getChildAt(2);
@@ -95,7 +99,6 @@ public class ChatFragment extends Fragment {
                 sub.setTextColor(ContextCompat.getColor(getContext(), R.color.incognito_hint));
             }
         } else {
-            // Standard Styling Reset
             btnSend.getBackground().setColorFilter(ContextCompat.getColor(getContext(), R.color.harmonica_primary), PorterDuff.Mode.SRC_IN);
             btnSend.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
         }
@@ -157,7 +160,7 @@ public class ChatFragment extends Fragment {
 
                     String aiText = analysis.insight + "\n\n" + analysis.advice;
                     db.saveMessage(sessionId, "ai", aiText);
-                    if (sessionId != -2) db.saveMood(analysis.score);
+                    if (sessionId != -2) db.saveMood(analysis.score, currentUserId);
 
                     messageList.add(new MessageAdapter.Message(aiText, "ai"));
                     adapter.notifyItemInserted(messageList.size() - 1);
