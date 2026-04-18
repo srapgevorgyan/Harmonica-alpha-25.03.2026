@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 
 public class GeminiService {
     private final GenerativeModelFutures model;
-    private final String API_KEY = "AIzaSyCnA5hu5U_oyte_zj4fi5LB4asrm63AEyU";
+    private final String API_KEY = "AIzaSyDKa8kCKpz-35CIfIo8B7nQ8HrhqroP7Vw";
 
     public static class MoodAnalysis {
         public int score = 5;
@@ -88,17 +88,27 @@ public class GeminiService {
                 .append("- Speak DIRECTLY to the user in the 1st person ('I' and 'you').\n")
                 .append("- NEVER use 3rd person (e.g., 'The user is feeling...'). This is a direct therapy session.\n")
                 .append("- Be warm and empathetic. Validate their feelings.\n")
+                .append("- CRITICAL: Keep responses EXTREMELY concise. Users in distress cannot read long paragraphs.\n")
+                .append("- Limit your empathetic response to 1 to 2 short sentences maximum\n")
+                .append("- In case user asks for advise, give brief actionable list\n")
+                .append("- And ALWAYS after giving a message, give a contiuation or follow-up question\n")
+                .append("- Format actionable advice as a short bulleted list using Markdown (-).\n")
                 .append("- Integrate therapeutic techniques naturally into your response.\n")
                 .append("- If you detect stress, anxiety, panic, or low mood, explicitly suggest they visit the 'Zen Space' in the sidebar menu for guided breathing or grounding.\n\n")
+                .append("THERAPEUTIC FRAMEWORKS TO UTILIZE:\n")
+                .append("- Grounding (Anxiety/Panic): Guide them through the 5-4-3-2-1 method or box breathing.\n")
+                .append("- CBT (Depression/Anxiety): Gently point out cognitive distortions (like catastrophizing) and encourage reframing negative thoughts.\n")
+                .append("- DBT (Severe Distress): Suggest T.I.P.P. skills (like splashing cold water on their face) to reset their nervous system.\n")
+                .append("- Behavioral Activation (Burnout/Depression): Suggest micro-goals. Break tasks down into ridiculously small, manageable steps.\n\n")
                 .append("JSON SCHEMA (MANDATORY):\n")
                 .append("{ \n")
                 .append("  \"score\": number, \n")
                 .append("  \"label\": string, \n")
                 .append("  \"insight\": \"Your direct, empathetic response to the user...\", \n")
-                .append("  \"advice\": \"Practical steps they can take right now...\", \n")
+                .append("  \"advice\": \"Practical steps they can take right now based on the therapeutic frameworks...\", \n")
                 .append("  \"chatTitle\": \"Short session title\", \n")
                 .append("  \"suggestedMode\": \"None\" | \"Calm\" | \"Focus\" | \"Elevate\" | \"Crisis\", \n")
-                .append("  \"suggestedPractices\": [ { \"title\": \"Friendly Name\", \"type\": \"Breathing\"|\"Grounding\", \"instruction\": \"Steps\" } ] \n")
+                .append("  \"suggestedPractices\": [ { \"title\": \"Friendly Name\", \"type\": \"Breathing\"|\"Grounding\"|\"CBT\"|\"DBT\"|\"Action\", \"instruction\": \"Step-by-step guide\" } ] \n")
                 .append("}\n\n")
                 .append("SESSION HISTORY:\n");
 

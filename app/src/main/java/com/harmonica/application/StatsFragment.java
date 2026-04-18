@@ -122,6 +122,6 @@ public class StatsFragment extends Fragment {
         if (avg >= 8) return "You've been feeling great lately! Your hormones seem balanced and your mindset is positive.";
         if (avg >= 6) return "You're doing well. Maintain your current healthy habits to keep your mood stable.";
         if (avg >= 4) return "You're in a bit of a neutral zone. Consider if stress or lack of sleep might be affecting your baseline.";
-        return "It looks like you've had a tough month. Remember to be kind to yourself and speak with Dr. Harmonica for support.";
+        return "It looks like you've had a tough time. Remember to be kind to yourself and speak with Dr. Harmonica for support.";
     }
 }
