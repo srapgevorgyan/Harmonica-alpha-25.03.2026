@@ -21,13 +21,13 @@
             android:textSize="28sp"
             android:textStyle="italic"
             android:layout_gravity="start"
-            android:layout_marginBottom="32dp" />
+            android:layout_marginBottom="24dp" />
 
         <!-- Profile Image -->
         <com.google.android.material.card.MaterialCardView
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            app:cardCornerRadius="60dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            app:cardCornerRadius="50dp"
             app:cardElevation="4dp"
             android:layout_marginBottom="16dp">
 
@@ -38,7 +38,7 @@
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_heart"
                 app:tint="@color/harmonica_primary"
-                android:padding="24dp" />
+                android:padding="20dp" />
         </com.google.android.material.card.MaterialCardView>
 
         <!-- User Info -->
@@ -60,19 +60,102 @@
             android:textColor="@color/harmonica_hint"
             android:textSize="14sp" />
 
+        <!-- Streak Section -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#E0E0E0">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+                    
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Current Streak"
+                        android:textColor="@color/harmonica_text"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/txtStreakCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 🔥"
+                        android:textColor="@color/harmonica_accent"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Weekly Activity"
+                    android:textSize="12sp"
+                    android:textColor="@color/harmonica_hint" />
+
+                <LinearLayout
+                    android:id="@+id/layoutWeeklySquares"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+                    <!-- 7 Squares will be here -->
+                    <View android:layout_width="32dp" android:layout_height="32dp" android:layout_margin="4dp" android:background="#EEEEEE" />
+                    <View android:layout_width="32dp" android:layout_height="32dp" android:layout_margin="4dp" android:background="#EEEEEE" />
+                    <View android:layout_width="32dp" android:layout_height="32dp" android:layout_margin="4dp" android:background="#EEEEEE" />
+                    <View android:layout_width="32dp" android:layout_height="32dp" android:layout_margin="4dp" android:background="#EEEEEE" />
+                    <View android:layout_width="32dp" android:layout_height="32dp" android:layout_margin="4dp" android:background="#EEEEEE" />
+                    <View android:layout_width="32dp" android:layout_height="32dp" android:layout_margin="4dp" android:background="#EEEEEE" />
+                    <View android:layout_width="32dp" android:layout_height="32dp" android:layout_margin="4dp" android:background="#EEEEEE" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+                    <TextView android:layout_width="32dp" android:layout_height="wrap_content" android:layout_margin="4dp" android:text="M" android:gravity="center" android:textSize="10sp" android:textColor="@color/harmonica_hint" />
+                    <TextView android:layout_width="32dp" android:layout_height="wrap_content" android:layout_margin="4dp" android:text="T" android:gravity="center" android:textSize="10sp" android:textColor="@color/harmonica_hint" />
+                    <TextView android:layout_width="32dp" android:layout_height="wrap_content" android:layout_margin="4dp" android:text="W" android:gravity="center" android:textSize="10sp" android:textColor="@color/harmonica_hint" />
+                    <TextView android:layout_width="32dp" android:layout_height="wrap_content" android:layout_margin="4dp" android:text="T" android:gravity="center" android:textSize="10sp" android:textColor="@color/harmonica_hint" />
+                    <TextView android:layout_width="32dp" android:layout_height="wrap_content" android:layout_margin="4dp" android:text="F" android:gravity="center" android:textSize="10sp" android:textColor="@color/harmonica_hint" />
+                    <TextView android:layout_width="32dp" android:layout_height="wrap_content" android:layout_margin="4dp" android:text="S" android:gravity="center" android:textSize="10sp" android:textColor="@color/harmonica_hint" />
+                    <TextView android:layout_width="32dp" android:layout_height="wrap_content" android:layout_margin="4dp" android:text="S" android:gravity="center" android:textSize="10sp" android:textColor="@color/harmonica_hint" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Change Password Section (Hidden for Google users) -->
         <LinearLayout
             android:id="@+id/layoutPasswordChange"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="32dp"
             android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Change Password"
+                android:text="Account Security"
                 android:textColor="@color/harmonica_primary"
                 android:textStyle="bold"
                 android:layout_marginBottom="16dp" />
@@ -123,7 +206,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="32dp"
             android:visibility="visible">
 
             <TextView

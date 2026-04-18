@@ -1,5 +1,6 @@
 package com.harmonica.application;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,13 +17,18 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Set;
 
 public class ProfileFragment extends Fragment {
 
     private FirebaseAuth mAuth;
-    private TextView txtEmail, txtAccountType;
+    private TextView txtEmail, txtAccountType, txtStreakCount;
     private ImageView imgProfile;
-    private LinearLayout layoutPasswordChange, layoutGuestCTA;
+    private LinearLayout layoutPasswordChange, layoutGuestCTA, layoutWeeklySquares;
     private TextInputEditText editNewPassword, editConfirmNewPassword;
     private Button btnUpdatePassword, btnGoToLogin;
 
@@ -36,9 +42,11 @@ public class ProfileFragment extends Fragment {
 
         txtEmail = v.findViewById(R.id.txtUserEmail);
         txtAccountType = v.findViewById(R.id.txtAccountType);
+        txtStreakCount = v.findViewById(R.id.txtStreakCount);
         imgProfile = v.findViewById(R.id.imgProfile);
         layoutPasswordChange = v.findViewById(R.id.layoutPasswordChange);
         layoutGuestCTA = v.findViewById(R.id.layoutGuestCTA);
+        layoutWeeklySquares = v.findViewById(R.id.layoutWeeklySquares);
         editNewPassword = v.findViewById(R.id.editNewPassword);
         editConfirmNewPassword = v.findViewById(R.id.editConfirmNewPassword);
         btnUpdatePassword = v.findViewById(R.id.btnUpdatePassword);
@@ -46,8 +54,10 @@ public class ProfileFragment extends Fragment {
 
         if (user != null) {
             setupUserUI(user);
+            calculateStreakAndActivity(user.getUid());
         } else {
             setupGuestUI();
+            calculateStreakAndActivity(null);
         }
 
         return v;
@@ -85,6 +95,55 @@ public class ProfileFragment extends Fragment {
                 ((MainActivity) getActivity()).loadFragment(new AuthFragment());
             }
         });
+    }
+
+    private void calculateStreakAndActivity(String uid) {
+        MoodDatabase db = new MoodDatabase(getContext());
+        Set<String> activityDates = db.getActivityDates(uid, 365);
+        
+        // 1. Weekly Squares Logic
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        Calendar cal = Calendar.getInstance();
+        
+        // Get start of week (Monday)
+        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+        if (cal.getFirstDayOfWeek() == Calendar.SUNDAY) cal.add(Calendar.DAY_OF_YEAR, 1); // Force Monday start
+
+        for (int i = 0; i < 7; i++) {
+            String dateStr = sdf.format(cal.getTime());
+            View square = layoutWeeklySquares.getChildAt(i);
+            if (square != null) {
+                if (activityDates.contains(dateStr)) {
+                    square.setBackgroundColor(Color.parseColor("#4CAF50")); // Green for active
+                } else {
+                    square.setBackgroundColor(Color.parseColor("#E0E0E0")); // Gray for inactive
+                }
+            }
+            cal.add(Calendar.DAY_OF_YEAR, 1);
+        }
+
+        // 2. Streak Logic
+        int streak = 0;
+        Calendar streakCal = Calendar.getInstance();
+        String todayStr = sdf.format(streakCal.getTime());
+        
+        if (activityDates.contains(todayStr)) {
+            streak = 1;
+            streakCal.add(Calendar.DAY_OF_YEAR, -1);
+            while (activityDates.contains(sdf.format(streakCal.getTime()))) {
+                streak++;
+                streakCal.add(Calendar.DAY_OF_YEAR, -1);
+            }
+        } else {
+            // Check if streak was active until yesterday
+            streakCal.add(Calendar.DAY_OF_YEAR, -1);
+            while (activityDates.contains(sdf.format(streakCal.getTime()))) {
+                streak++;
+                streakCal.add(Calendar.DAY_OF_YEAR, -1);
+            }
+        }
+        
+        txtStreakCount.setText(streak + " Days");
     }
 
     private void updatePassword(FirebaseUser user) {

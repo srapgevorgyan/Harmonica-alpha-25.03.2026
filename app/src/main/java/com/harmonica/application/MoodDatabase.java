@@ -6,7 +6,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class MoodDatabase extends SQLiteOpenHelper {
     private static final String DB_NAME = "HarmonicaDB";
@@ -35,7 +37,7 @@ public class MoodDatabase extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldV, int newV) {
         if (oldV < 2) {
-            db.execSQL("CREATE TABLE sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, timestamp LONG)");
+            db.execSQL("CREATE TABLE sessions (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, timestamp LONG, userId TEXT)");
             db.execSQL("CREATE TABLE messages (id INTEGER PRIMARY KEY AUTOINCREMENT, sessionId INTEGER, sender TEXT, text TEXT, timestamp LONG)");
         }
         if (oldV < 3) {
@@ -125,6 +127,31 @@ public class MoodDatabase extends SQLiteOpenHelper {
             }
         } catch (Exception ignored) {}
         return entries;
+    }
+
+    public Set<String> getActivityDates(String userId, int daysLimit) {
+        Set<String> dates = new HashSet<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query;
+        String[] args;
+        if (userId == null) {
+            query = "SELECT date(timestamp/1000, 'unixepoch', 'localtime') FROM messages " +
+                    "WHERE sessionId IN (SELECT id FROM sessions WHERE userId IS NULL) " +
+                    "ORDER BY timestamp DESC LIMIT 500";
+            args = null;
+        } else {
+            query = "SELECT date(timestamp/1000, 'unixepoch', 'localtime') FROM messages " +
+                    "WHERE sessionId IN (SELECT id FROM sessions WHERE userId = ?) " +
+                    "ORDER BY timestamp DESC LIMIT 500";
+            args = new String[]{userId};
+        }
+        
+        try (Cursor cursor = db.rawQuery(query, args)) {
+            while (cursor.moveToNext()) {
+                dates.add(cursor.getString(0));
+            }
+        } catch (Exception ignored) {}
+        return dates;
     }
 
     public static class SessionHeader {
