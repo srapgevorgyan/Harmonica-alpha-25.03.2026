@@ -62,41 +62,48 @@ public class MainActivity extends AppCompatActivity {
             if (id == R.id.nav_manage) {
                 showMultiDeleteDialog();
             }
-            else if (id == R.id.nav_profile) {
-                selectedFragment = new AuthFragment();
-            }
             else if (id == R.id.nav_signout) {
                 mAuth.signOut();
                 Toast.makeText(this, "Signed out successfully", Toast.LENGTH_SHORT).show();
-                updateMenuWithSessions(); // Clear sidebar
+                updateMenuWithSessions(); 
                 loadFragment(new AuthFragment());
                 customToolbar.setVisibility(View.GONE);
             }
+            else if (id == R.id.nav_profile) {
+                selectedFragment = new AuthFragment();
+            }
+            else if (id == R.id.nav_zen) {
+                selectedFragment = new ZenSpaceFragment();
+            }
             else if (item.getGroupId() == 2) {
-                showChatOptionsDialog(item.getItemId(), item.getTitle().toString());
+                ChatFragment chat = new ChatFragment();
+                Bundle b = new Bundle();
+                b.putLong("sessionId", item.getItemId());
+                chat.setArguments(b);
+                selectedFragment = chat;
             }
-            else {
-                if (id == R.id.nav_chat) {
-                    selectedFragment = new ChatFragment();
-                } else if (id == R.id.nav_incognito) {
-                    selectedFragment = new ChatFragment();
-                    Bundle b = new Bundle();
-                    b.putLong("sessionId", -2); // Incognito session
-                    selectedFragment.setArguments(b);
-                } else if (id == R.id.nav_stats) {
-                    selectedFragment = new StatsFragment();
-                } else if (id == R.id.nav_edu) {
-                    selectedFragment = new EducationFragment();
-                }
-                if (selectedFragment != null) {
-                    loadFragment(selectedFragment);
-                }
+            else if (id == R.id.nav_chat) {
+                selectedFragment = new ChatFragment();
+            } else if (id == R.id.nav_incognito) {
+                selectedFragment = new ChatFragment();
+                Bundle b = new Bundle();
+                b.putLong("sessionId", -2); // Incognito session
+                selectedFragment.setArguments(b);
+            } else if (id == R.id.nav_stats) {
+                selectedFragment = new StatsFragment();
+            } else if (id == R.id.nav_edu) {
+                selectedFragment = new EducationFragment();
             }
+
+            // Load the fragment if one was selected
+            if (selectedFragment != null) {
+                loadFragment(selectedFragment);
+            }
+
             drawerLayout.closeDrawer(GravityCompat.START);
             return true;
         });
 
-        // 4. Startup logic: Show Auth if not logged in, otherwise Chat
         if (savedInstanceState == null) {
             if (mAuth.getCurrentUser() == null) {
                 loadFragment(new AuthFragment());
@@ -125,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void onAuthFinished() {
         customToolbar.setVisibility(View.VISIBLE);
-        updateMenuWithSessions(); // Refresh sidebar for the logged-in user
+        updateMenuWithSessions();
         loadFragment(new ChatFragment());
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setCheckedItem(R.id.nav_chat);

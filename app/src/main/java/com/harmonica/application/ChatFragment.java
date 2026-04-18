@@ -162,7 +162,12 @@ public class ChatFragment extends Fragment {
                     db.saveMessage(sessionId, "ai", aiText);
                     if (sessionId != -2) db.saveMood(analysis.score, currentUserId);
 
-                    messageList.add(new MessageAdapter.Message(aiText, "ai"));
+                    MessageAdapter.Message aiMessage = new MessageAdapter.Message(aiText, "ai");
+                    if (analysis.suggestedPractices != null && !analysis.suggestedPractices.isEmpty()) {
+                        aiMessage.suggestedPractice = analysis.suggestedPractices.get(0);
+                    }
+                    
+                    messageList.add(aiMessage);
                     adapter.notifyItemInserted(messageList.size() - 1);
                     recyclerView.scrollToPosition(messageList.size() - 1);
 

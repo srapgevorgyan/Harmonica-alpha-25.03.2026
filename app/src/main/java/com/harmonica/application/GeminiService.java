@@ -10,6 +10,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ import java.util.concurrent.Executors;
 
 public class GeminiService {
     private final GenerativeModelFutures model;
-    private final String API_KEY = "AIzaSyCYttkcxWF4u_377TVSq-b9lUZM34ncCHk";
+    private final String API_KEY = "AIzaSyCnA5hu5U_oyte_zj4fi5LB4asrm63AEyU";
 
     public static class MoodAnalysis {
         public int score = 5;
@@ -26,6 +27,20 @@ public class GeminiService {
         public String insight = "";
         public String advice = "";
         public String chatTitle = "New Conversation";
+        public String suggestedMode = "None";
+        public List<Practice> suggestedPractices = new ArrayList<>();
+    }
+
+    public static class Practice {
+        public String title;
+        public String type; // "Breathing", "Grounding", "Music"
+        public String instruction;
+        
+        public Practice(String title, String type, String instruction) {
+            this.title = title;
+            this.type = type;
+            this.instruction = instruction;
+        }
     }
 
     public static class HormoneEducation {
@@ -47,7 +62,7 @@ public class GeminiService {
 
     public GeminiService() {
         GenerationConfig.Builder configBuilder = new GenerationConfig.Builder();
-        configBuilder.temperature = 1.0f;
+        configBuilder.temperature = 0.7f; 
         configBuilder.responseMimeType = "application/json";
         GenerationConfig config = configBuilder.build();
 
@@ -68,19 +83,32 @@ public class GeminiService {
         android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
         StringBuilder promptBuilder = new StringBuilder();
-        promptBuilder.append("You are Dr. Harmonica, a psychological assistant and hormonal health expert. ")
-                .append("Analyze the conversation history and the latest message. ")
-                .append("Provide empathetic insights and actionable advice focused on hormonal balance.\n\n")
-                .append("RESPOND ONLY IN JSON matching this schema:\n")
-                .append("{ \"score\": number, \"label\": string, \"insight\": string, \"advice\": string, \"chatTitle\": string }\n\n")
-                .append("HISTORY:\n");
+        promptBuilder.append("You are Dr. Harmonica, a compassionate, professional psychologist. ")
+                .append("RULES OF CONDUCT:\n")
+                .append("- Speak DIRECTLY to the user in the 1st person ('I' and 'you').\n")
+                .append("- NEVER use 3rd person (e.g., 'The user is feeling...'). This is a direct therapy session.\n")
+                .append("- Be warm and empathetic. Validate their feelings.\n")
+                .append("- Integrate therapeutic techniques naturally into your response.\n")
+                .append("- If you detect stress, anxiety, panic, or low mood, explicitly suggest they visit the 'Zen Space' in the sidebar menu for guided breathing or grounding.\n\n")
+                .append("JSON SCHEMA (MANDATORY):\n")
+                .append("{ \n")
+                .append("  \"score\": number, \n")
+                .append("  \"label\": string, \n")
+                .append("  \"insight\": \"Your direct, empathetic response to the user...\", \n")
+                .append("  \"advice\": \"Practical steps they can take right now...\", \n")
+                .append("  \"chatTitle\": \"Short session title\", \n")
+                .append("  \"suggestedMode\": \"None\" | \"Calm\" | \"Focus\" | \"Elevate\" | \"Crisis\", \n")
+                .append("  \"suggestedPractices\": [ { \"title\": \"Friendly Name\", \"type\": \"Breathing\"|\"Grounding\", \"instruction\": \"Steps\" } ] \n")
+                .append("}\n\n")
+                .append("SESSION HISTORY:\n");
 
         for (MessageAdapter.Message msg : history) {
             if (msg.isTyping) continue;
-            String role = msg.sender.equals("user") ? "User" : "Assistant";
+            String role = msg.sender.equals("user") ? "User" : "Dr. Harmonica";
             promptBuilder.append(role).append(": ").append(msg.text).append("\n");
         }
-        promptBuilder.append("User (Latest): ").append(userText);
+        promptBuilder.append("User: ").append(userText).append("\n\n")
+                .append("Dr. Harmonica (Respond in JSON):");
 
         Content content = new Content.Builder().addText(promptBuilder.toString()).build();
         ListenableFuture<GenerateContentResponse> response = model.generateContent(content);
@@ -102,13 +130,10 @@ public class GeminiService {
         android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
         StringBuilder promptBuilder = new StringBuilder();
-        promptBuilder.append("Pick a random hormone or neurochemical. Be creative and pick something unique. ")
-                .append("CRITICAL: Do NOT pick any of the following recently shown: ")
-                .append(String.join(", ", excludeList)).append(". ")
-                .append("\n\nFor the 'url' field, provide a RELIABLE search link to Mayo Clinic or Healthline. ")
-                .append("Example format: https://www.mayoclinic.org/search/search-results?q=hormone_name ")
-                .append("or https://www.healthline.com/search?q1=hormone_name. ")
-                .append("\n\nRESPOND ONLY IN JSON: { \"name\": string, \"type\": string, \"description\": string, \"url\": string }");
+        promptBuilder.append("Pick a unique hormone. ")
+                .append("Exclude: ").append(String.join(", ", excludeList)).append(". ")
+                .append("Provide a search link in the 'url' field. ")
+                .append("Respond in JSON: { \"name\", \"type\", \"description\", \"url\" }");
 
         Content content = new Content.Builder().addText(promptBuilder.toString()).build();
         ListenableFuture<GenerateContentResponse> response = model.generateContent(content);
@@ -135,8 +160,21 @@ public class GeminiService {
             m.insight = json.optString("insight", "");
             m.advice = json.optString("advice", "");
             m.chatTitle = json.optString("chatTitle", "New Topic");
+            m.suggestedMode = json.optString("suggestedMode", "None");
+            
+            JSONArray practices = json.optJSONArray("suggestedPractices");
+            if (practices != null) {
+                for (int i = 0; i < practices.length(); i++) {
+                    JSONObject p = practices.getJSONObject(i);
+                    m.suggestedPractices.add(new Practice(
+                        p.optString("title"),
+                        p.optString("type"),
+                        p.optString("instruction")
+                    ));
+                }
+            }
         } catch (Exception e) {
-            m.insight = (raw != null) ? raw : "Error parsing response.";
+            m.insight = (raw != null) ? raw : "I'm here to listen.";
         }
         return m;
     }
@@ -147,11 +185,11 @@ public class GeminiService {
             JSONObject json = new JSONObject(cleanJson(raw));
             h.name = json.optString("name", "Unknown Hormone");
             h.type = json.optString("type", "General Health");
-            h.description = json.optString("description", "A key chemical in the body.");
+            h.description = json.optString("description", "A key chemical.");
             h.url = json.optString("url", "https://www.healthline.com");
         } catch (Exception e) {
-            h.name = "Error loading";
-            h.description = "Could not parse AI response.";
+            h.name = "Error";
+            h.description = "Could not parse response.";
         }
         return h;
     }

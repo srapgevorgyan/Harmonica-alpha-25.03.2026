@@ -1,8 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="start"
+    android:orientation="vertical"
     android:padding="8dp">
+
     <TextView
         android:id="@+id/txtMessage"
         android:layout_width="wrap_content"
@@ -12,4 +16,19 @@
         android:textColor="#000000"
         android:textSize="14sp"
         android:maxWidth="280dp"/>
+
+    <!-- Practice Button Container -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnStartPractice"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Start Recommended Practice"
+        android:textAllCaps="false"
+        android:textSize="12sp"
+        app:cornerRadius="16dp"
+        app:icon="@drawable/ic_heart"
+        android:visibility="gone" />
+
 </LinearLayout>
