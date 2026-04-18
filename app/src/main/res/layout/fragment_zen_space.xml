@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/harmonica_bg"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/txtZenTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="serif"
+        android:text="Zen Space"
+        android:textColor="@color/harmonica_primary"
+        android:textSize="28sp"
+        android:textStyle="italic"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/txtZenSubtitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Take a moment for yourself."
+        android:textColor="@color/harmonica_hint"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtZenTitle" />
+
+    <!-- 1. Selection UI (Visible when no practice is active) -->
+    <LinearLayout
+        android:id="@+id/layoutSelection"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/btnEndZen"
+        app:layout_constraintTop_toBottomOf="@id/txtZenSubtitle">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardBreathing"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Guided Breathing"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/harmonica_primary" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Regulate your heart rate with a 4-4-4 cycle."
+                    android:textSize="13sp"
+                    android:textColor="@color/harmonica_hint" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardGrounding"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="5-4-3-2-1 Grounding"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/harmonica_primary" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Re-center your mind using your five senses."
+                    android:textSize="13sp"
+                    android:textColor="@color/harmonica_hint" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+
+    <!-- 2. Breathing Container -->
+    <LinearLayout
+        android:id="@+id/layoutBreathing"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/btnEndZen"
+        app:layout_constraintTop_toBottomOf="@id/txtZenSubtitle">
+
+        <View
+            android:id="@+id/viewBreathingCircle"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:background="@drawable/bg_circle_breathing" />
+
+        <TextView
+            android:id="@+id/txtBreathAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="48dp"
+            android:fontFamily="serif"
+            android:text="Inhale..."
+            android:textColor="@color/harmonica_primary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- 3. Grounding Container -->
+    <LinearLayout
+        android:id="@+id/layoutGrounding"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:paddingTop="32dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/btnEndZen"
+        app:layout_constraintTop_toBottomOf="@id/txtZenSubtitle">
+
+        <TextView
+            android:id="@+id/txtGroundingPrompt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Focus on your surroundings..."
+            android:textColor="@color/harmonica_text"
+            android:textSize="18sp"
+            android:lineSpacingExtra="4dp" />
+            
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvGroundingList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="24dp" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnEndZen"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Back"
+        app:cornerRadius="28dp"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
