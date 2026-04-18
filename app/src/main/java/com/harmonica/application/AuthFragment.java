@@ -42,20 +42,38 @@ public class AuthFragment extends Fragment {
     private final ActivityResultLauncher<Intent> googleSignInLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
+                Log.d("AuthFragment", "Google Sign-In activity result received. Code: " + result.getResultCode());
                 if (result.getResultCode() == android.app.Activity.RESULT_OK) {
                     Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
                     try {
                         GoogleSignInAccount account = task.getResult(ApiException.class);
                         if (account != null) {
+                            Log.d("AuthFragment", "Google Account found: " + account.getEmail());
                             firebaseAuthWithGoogle(account.getIdToken());
                         }
                     } catch (ApiException e) {
-                        Log.e("AuthFragment", "Google sign in failed", e);
-                        Toast.makeText(getContext(), "Google sign in failed: " + e.getStatusCode(), Toast.LENGTH_SHORT).show();
+                        Log.e("AuthFragment", "Google sign in failed code: " + e.getStatusCode(), e);
+                        String errorMsg = getGoogleErrorMessage(e.getStatusCode());
+                        Toast.makeText(getContext(), errorMsg, Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    Log.e("AuthFragment", "Google Sign-In canceled or failed. Result code: " + result.getResultCode());
+                    if (result.getResultCode() != android.app.Activity.RESULT_CANCELED) {
+                        Toast.makeText(getContext(), "Sign-in failed. Result: " + result.getResultCode(), Toast.LENGTH_SHORT).show();
                     }
                 }
             }
     );
+
+    private String getGoogleErrorMessage(int statusCode) {
+        switch (statusCode) {
+            case 7: return "Google Error 7: Network error. Please check your connection.";
+            case 10: return "Google Error 10: Configuration error. Ensure SHA-1 is in Firebase and Web Client ID is correct.";
+            case 12500: return "Google Error 12500: Sign-in failed. Check Play Services or account status.";
+            case 12501: return "Sign-in canceled by user.";
+            default: return "Google sign in failed (Code " + statusCode + "). Please check Firebase Console.";
+        }
+    }
 
     @Nullable
     @Override
@@ -84,18 +102,16 @@ public class AuthFragment extends Fragment {
     }
 
     private void setupGoogleSignIn() {
-        // Use the default_web_client_id which is generated from google-services.json
-        // If this string is missing, ensure you have enabled Google Sign-In in Firebase Console
-        // and re-downloaded the google-services.json file.
         int clientIdRes = getResources().getIdentifier("default_web_client_id", "string", requireContext().getPackageName());
         
-        String webClientId;
+        String webClientId = null;
         if (clientIdRes != 0) {
             webClientId = getString(clientIdRes);
+            Log.d("AuthFragment", "Using Web Client ID from resources: " + webClientId);
         } else {
-            // Fallback to the one you provided if resource is missing, 
-            // but note that it might need to be the full ID (usually starts with numbers)
-            webClientId = "harmonica-5d34d.apps.googleusercontent.com"; 
+            // Fallback
+            webClientId = "369981916912-8ut1eqemthnu9l0dhsac2opjm4rgelec.apps.googleusercontent.com";
+            Log.w("AuthFragment", "Using fallback Web Client ID. This may fail if not correct for your project.");
         }
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -107,7 +123,6 @@ public class AuthFragment extends Fragment {
     }
 
     private void signInWithGoogle() {
-        // Sign out first to ensure account picker always appears
         mGoogleSignInClient.signOut().addOnCompleteListener(requireActivity(), task -> {
             Intent signInIntent = mGoogleSignInClient.getSignInIntent();
             googleSignInLauncher.launch(signInIntent);
@@ -116,7 +131,8 @@ public class AuthFragment extends Fragment {
 
     private void firebaseAuthWithGoogle(String idToken) {
         if (idToken == null) {
-            Toast.makeText(getContext(), "Failed to get ID Token from Google", Toast.LENGTH_SHORT).show();
+            Log.e("AuthFragment", "ID Token is null");
+            Toast.makeText(getContext(), "Failed to get token from Google", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -124,9 +140,10 @@ public class AuthFragment extends Fragment {
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(requireActivity(), task -> {
                     if (task.isSuccessful()) {
+                        Log.d("AuthFragment", "Firebase Auth with Google successful");
                         proceedToApp();
                     } else {
-                        String error = task.getException() != null ? task.getException().getMessage() : "Unknown error";
+                        String error = task.getException() != null ? task.getException().getMessage() : "Unknown Firebase error";
                         Log.e("AuthFragment", "Firebase Auth with Google failed: " + error);
                         Toast.makeText(getContext(), "Auth Failed: " + error, Toast.LENGTH_LONG).show();
                     }
@@ -144,6 +161,8 @@ public class AuthFragment extends Fragment {
     }
 
     private void handleAuth() {
+        if (editEmail == null || editPassword == null) return;
+        
         String email = editEmail.getText() != null ? editEmail.getText().toString().trim() : "";
         String password = editPassword.getText() != null ? editPassword.getText().toString().trim() : "";
 
@@ -159,7 +178,7 @@ public class AuthFragment extends Fragment {
                 return;
             }
             if (!isValidPassword(password)) {
-                Toast.makeText(getContext(), "Password does not meet requirements", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Password must be 8+ chars, with upper, lower, and special char (@#$%^&+=!)", Toast.LENGTH_LONG).show();
                 return;
             }
         }
@@ -169,9 +188,9 @@ public class AuthFragment extends Fragment {
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             FirebaseUser user = mAuth.getCurrentUser();
-                            if (user != null && user.isEmailVerified()) {
+                            if (user != null && (user.isEmailVerified() || !user.getProviderData().get(1).getProviderId().equals("password"))) {
                                 proceedToApp();
-                            } else {
+                            } else if (user != null) {
                                 Toast.makeText(getContext(), "Please verify your email first.", Toast.LENGTH_LONG).show();
                                 mAuth.signOut();
                             }
