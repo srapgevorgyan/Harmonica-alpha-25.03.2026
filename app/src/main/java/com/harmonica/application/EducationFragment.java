@@ -22,8 +22,7 @@ public class EducationFragment extends Fragment {
     private ProgressBar progressBar;
     private String currentUrl = "https://www.mayoclinic.org";
     private GeminiService gemini;
-    
-    // List to keep track of recently shown hormones to avoid repetition
+
     private final List<String> recentHormones = new ArrayList<>();
     private static final int MAX_RECENT_SIZE = 5;
 

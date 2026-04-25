@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 
 public class GeminiService {
     private final GenerativeModelFutures model;
-    private final String API_KEY = "AIzaSyDKa8kCKpz-35CIfIo8B7nQ8HrhqroP7Vw";
+    private final String API_KEY = "AIzaSyCwuwcqDrmhCZxGI31Ym8SjGCurrvjIilU";
 
     public static class MoodAnalysis {
         public int score = 5;
@@ -33,7 +33,7 @@ public class GeminiService {
 
     public static class Practice {
         public String title;
-        public String type; // "Breathing", "Grounding", "Music"
+        public String type;
         public String instruction;
         
         public Practice(String title, String type, String instruction) {

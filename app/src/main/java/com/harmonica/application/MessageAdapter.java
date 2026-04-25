@@ -82,7 +82,6 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             vh.tv.setText(m.text);
             applyStyle(vh.tv, false);
 
-            // Handle Practice Button
             if (m.suggestedPractice != null) {
                 vh.btnPractice.setVisibility(View.VISIBLE);
                 vh.btnPractice.setText("Start " + m.suggestedPractice.title);
