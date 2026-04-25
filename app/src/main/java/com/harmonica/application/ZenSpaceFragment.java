@@ -12,8 +12,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -27,8 +29,10 @@ public class ZenSpaceFragment extends Fragment {
     private String type, title, instruction;
     private View circle;
     private TextView txtAction, txtPrompt, txtZenTitle;
-    private LinearLayout layoutSelection, layoutBreathing, layoutGrounding;
-    private Button btnEndZen;
+    private View layoutSelection; // Changed to View to handle ScrollView safely
+    private LinearLayout layoutBreathing, layoutGrounding, layoutGratitude;
+    private Button btnEndZen, btnSaveGratitude;
+    private EditText editG1, editG2, editG3;
     private RecyclerView rvGroundingList;
     private boolean isRunning = true;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -55,16 +59,24 @@ public class ZenSpaceFragment extends Fragment {
         }
 
         txtZenTitle = v.findViewById(R.id.txtZenTitle);
-        txtZenTitle.setText(title != null ? title : "Zen Space");
-        
         layoutSelection = v.findViewById(R.id.layoutSelection);
         layoutBreathing = v.findViewById(R.id.layoutBreathing);
         layoutGrounding = v.findViewById(R.id.layoutGrounding);
+        layoutGratitude = v.findViewById(R.id.layoutGratitude);
+        
         circle = v.findViewById(R.id.viewBreathingCircle);
         txtAction = v.findViewById(R.id.txtBreathAction);
         txtPrompt = v.findViewById(R.id.txtGroundingPrompt);
         btnEndZen = v.findViewById(R.id.btnEndZen);
         rvGroundingList = v.findViewById(R.id.rvGroundingList);
+        
+        editG1 = v.findViewById(R.id.editGratitude1);
+        editG2 = v.findViewById(R.id.editGratitude2);
+        editG3 = v.findViewById(R.id.editGratitude3);
+        btnSaveGratitude = v.findViewById(R.id.btnSaveGratitude);
+
+        // Initial title setup
+        txtZenTitle.setText(title != null ? title : "Zen Space");
 
         // Selection Cards
         v.findViewById(R.id.cardBreathing).setOnClickListener(view -> {
@@ -75,6 +87,11 @@ public class ZenSpaceFragment extends Fragment {
         v.findViewById(R.id.cardGrounding).setOnClickListener(view -> {
             type = "Grounding";
             startGroundingExercise();
+        });
+        
+        v.findViewById(R.id.cardGratitude).setOnClickListener(view -> {
+            type = "Gratitude";
+            startGratitudeExercise();
         });
 
         btnEndZen.setOnClickListener(view -> {
@@ -87,12 +104,21 @@ public class ZenSpaceFragment extends Fragment {
                 resetToSelection();
             }
         });
+        
+        btnSaveGratitude.setOnClickListener(view -> {
+            Toast.makeText(getContext(), "Thoughts saved to your heart. Well done.", Toast.LENGTH_SHORT).show();
+            resetToSelection();
+        });
 
         if (type != null) {
             if ("Breathing".equalsIgnoreCase(type)) {
                 startBreathingExercise();
             } else if ("Grounding".equalsIgnoreCase(type)) {
                 startGroundingExercise();
+            } else if ("Gratitude".equalsIgnoreCase(type)) {
+                startGratitudeExercise();
+            } else {
+                resetToSelection();
             }
         } else {
             resetToSelection();
@@ -102,19 +128,20 @@ public class ZenSpaceFragment extends Fragment {
     }
 
     private void resetToSelection() {
-        layoutSelection.setVisibility(View.VISIBLE);
-        layoutBreathing.setVisibility(View.GONE);
-        layoutGrounding.setVisibility(View.GONE);
-        txtZenTitle.setText("Zen Space");
-        btnEndZen.setText("Back");
+        if (layoutSelection != null) layoutSelection.setVisibility(View.VISIBLE);
+        if (layoutBreathing != null) layoutBreathing.setVisibility(View.GONE);
+        if (layoutGrounding != null) layoutGrounding.setVisibility(View.GONE);
+        if (layoutGratitude != null) layoutGratitude.setVisibility(View.GONE);
+        if (txtZenTitle != null) txtZenTitle.setText("Zen Space");
+        if (btnEndZen != null) btnEndZen.setText("Back");
     }
 
     private void startBreathingExercise() {
-        layoutSelection.setVisibility(View.GONE);
-        layoutBreathing.setVisibility(View.VISIBLE);
+        if (layoutSelection != null) layoutSelection.setVisibility(View.GONE);
+        if (layoutBreathing != null) layoutBreathing.setVisibility(View.VISIBLE);
         isRunning = true;
-        txtZenTitle.setText("Breathing Session");
-        btnEndZen.setText("Stop Exercise");
+        if (txtZenTitle != null) txtZenTitle.setText("Breathing Session");
+        if (btnEndZen != null) btnEndZen.setText("Stop Exercise");
         runBreathingCycle();
     }
 
@@ -155,10 +182,10 @@ public class ZenSpaceFragment extends Fragment {
     }
 
     private void startGroundingExercise() {
-        layoutSelection.setVisibility(View.GONE);
-        layoutGrounding.setVisibility(View.VISIBLE);
-        txtZenTitle.setText("Grounding Session");
-        btnEndZen.setText("Finish");
+        if (layoutSelection != null) layoutSelection.setVisibility(View.GONE);
+        if (layoutGrounding != null) layoutGrounding.setVisibility(View.VISIBLE);
+        if (txtZenTitle != null) txtZenTitle.setText("Grounding Session");
+        if (btnEndZen != null) btnEndZen.setText("Finish");
         
         txtPrompt.setText(instruction != null ? instruction : "Focus on your surroundings using the 5-4-3-2-1 method.");
         
@@ -190,6 +217,17 @@ public class ZenSpaceFragment extends Fragment {
             @Override
             public int getItemCount() { return items.size(); }
         });
+    }
+
+    private void startGratitudeExercise() {
+        if (layoutSelection != null) layoutSelection.setVisibility(View.GONE);
+        if (layoutGratitude != null) layoutGratitude.setVisibility(View.VISIBLE);
+        if (txtZenTitle != null) txtZenTitle.setText("Gratitude Practice");
+        if (btnEndZen != null) btnEndZen.setText("Stop");
+        
+        editG1.setText("");
+        editG2.setText("");
+        editG3.setText("");
     }
 
     @Override
