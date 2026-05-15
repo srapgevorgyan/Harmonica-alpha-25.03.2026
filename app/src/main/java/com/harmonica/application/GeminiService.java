@@ -1,5 +1,7 @@
 package com.harmonica.application;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import com.google.ai.client.generativeai.GenerativeModel;
 import com.google.ai.client.generativeai.java.GenerativeModelFutures;
 import com.google.ai.client.generativeai.type.Content;
@@ -18,8 +20,8 @@ import java.util.List;
 import java.util.concurrent.Executors;
 
 public class GeminiService {
-    private final GenerativeModelFutures model;
-    private final String API_KEY = "AIzaSyCwuwcqDrmhCZxGI31Ym8SjGCurrvjIilU";
+    private final String API_KEY_DEFAULT = "AIzaSyAOgWzU3wAfLWgW6ENRV1O30wiy68GzlDU";
+    private GenerativeModelFutures model;
 
     public static class MoodAnalysis {
         public int score = 5;
@@ -60,20 +62,26 @@ public class GeminiService {
         void onError(String message);
     }
 
-    public GeminiService() {
+    public GeminiService(Context context) {
+        initModel(context);
+    }
+
+    private void initModel(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences("HarmonicaPrefs", Context.MODE_PRIVATE);
+        String customKey = prefs.getString("gemini_api_key", null);
+        String activeKey = (customKey != null && !customKey.isEmpty()) ? customKey : API_KEY_DEFAULT;
+
         GenerationConfig.Builder configBuilder = new GenerationConfig.Builder();
         configBuilder.temperature = 0.7f; 
         configBuilder.responseMimeType = "application/json";
         GenerationConfig config = configBuilder.build();
 
-        RequestOptions requestOptions = new RequestOptions();
-
         GenerativeModel baseModel = new GenerativeModel(
                 "gemini-2.5-flash",
-                API_KEY,
+                activeKey,
                 config,
                 new ArrayList<>(),
-                requestOptions
+                new RequestOptions()
         );
 
         this.model = GenerativeModelFutures.from(baseModel);
@@ -105,10 +113,10 @@ public class GeminiService {
                 .append("  \"score\": number, \n")
                 .append("  \"label\": string, \n")
                 .append("  \"insight\": \"Your direct, empathetic response to the user...\", \n")
-                .append("  \"advice\": \"Practical steps they can take right now based on the therapeutic frameworks...\", \n")
+                .append("  \"advice\": \"Practical steps they can take right now...\", \n")
                 .append("  \"chatTitle\": \"Short session title\", \n")
                 .append("  \"suggestedMode\": \"None\" | \"Calm\" | \"Focus\" | \"Elevate\" | \"Crisis\", \n")
-                .append("  \"suggestedPractices\": [ { \"title\": \"Friendly Name\", \"type\": \"Breathing\"|\"Grounding\"|\"CBT\"|\"DBT\"|\"Action\", \"instruction\": \"Step-by-step guide\" } ] \n")
+                .append("  \"suggestedPractices\": [ { \"title\": \"Friendly Name\", \"type\": \"Breathing\"|\"Grounding\", \"instruction\": \"Steps\" } ] \n")
                 .append("}\n\n")
                 .append("SESSION HISTORY:\n");
 
@@ -184,7 +192,7 @@ public class GeminiService {
                 }
             }
         } catch (Exception e) {
-            m.insight = (raw != null) ? raw : "I'm here to listen.";
+            m.insight = (raw != null) ? raw : "I'm listening.";
         }
         return m;
     }

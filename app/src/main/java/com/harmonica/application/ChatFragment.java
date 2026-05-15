@@ -48,7 +48,7 @@ public class ChatFragment extends Fragment {
         root = inflater.inflate(R.layout.fragment_chat, container, false);
 
         db = new MoodDatabase(getContext());
-        gemini = new GeminiService();
+        gemini = new GeminiService(getContext());
         
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         currentUserId = (user != null) ? user.getUid() : null;

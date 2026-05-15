@@ -1,5 +1,7 @@
 package com.harmonica.application;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -29,8 +31,8 @@ public class ProfileFragment extends Fragment {
     private TextView txtEmail, txtAccountType, txtStreakCount;
     private ImageView imgProfile;
     private LinearLayout layoutPasswordChange, layoutGuestCTA, layoutWeeklySquares;
-    private TextInputEditText editNewPassword, editConfirmNewPassword;
-    private Button btnUpdatePassword, btnGoToLogin;
+    private TextInputEditText editNewPassword, editConfirmNewPassword, editGeminiKey;
+    private Button btnUpdatePassword, btnGoToLogin, btnSaveApiKey;
 
     @Nullable
     @Override
@@ -49,8 +51,20 @@ public class ProfileFragment extends Fragment {
         layoutWeeklySquares = v.findViewById(R.id.layoutWeeklySquares);
         editNewPassword = v.findViewById(R.id.editNewPassword);
         editConfirmNewPassword = v.findViewById(R.id.editConfirmNewPassword);
+        editGeminiKey = v.findViewById(R.id.editGeminiApiKey);
         btnUpdatePassword = v.findViewById(R.id.btnUpdatePassword);
         btnGoToLogin = v.findViewById(R.id.btnGoToLogin);
+        btnSaveApiKey = v.findViewById(R.id.btnSaveApiKey);
+
+        // Load existing API key
+        SharedPreferences prefs = requireContext().getSharedPreferences("HarmonicaPrefs", Context.MODE_PRIVATE);
+        editGeminiKey.setText(prefs.getString("gemini_api_key", ""));
+
+        btnSaveApiKey.setOnClickListener(view -> {
+            String key = editGeminiKey.getText().toString().trim();
+            prefs.edit().putString("gemini_api_key", key).apply();
+            Toast.makeText(getContext(), "API Key Updated. Restarting session...", Toast.LENGTH_SHORT).show();
+        });
 
         if (user != null) {
             setupUserUI(user);
@@ -101,28 +115,25 @@ public class ProfileFragment extends Fragment {
         MoodDatabase db = new MoodDatabase(getContext());
         Set<String> activityDates = db.getActivityDates(uid, 365);
         
-        // 1. Weekly Squares Logic
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         Calendar cal = Calendar.getInstance();
         
-        // Get start of week (Monday)
         cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
-        if (cal.getFirstDayOfWeek() == Calendar.SUNDAY) cal.add(Calendar.DAY_OF_YEAR, 1); // Force Monday start
+        if (cal.getFirstDayOfWeek() == Calendar.SUNDAY) cal.add(Calendar.DAY_OF_YEAR, 1);
 
         for (int i = 0; i < 7; i++) {
             String dateStr = sdf.format(cal.getTime());
             View square = layoutWeeklySquares.getChildAt(i);
             if (square != null) {
                 if (activityDates.contains(dateStr)) {
-                    square.setBackgroundColor(Color.parseColor("#4CAF50")); // Green for active
+                    square.setBackgroundColor(Color.parseColor("#4CAF50"));
                 } else {
-                    square.setBackgroundColor(Color.parseColor("#E0E0E0")); // Gray for inactive
+                    square.setBackgroundColor(Color.parseColor("#E0E0E0"));
                 }
             }
             cal.add(Calendar.DAY_OF_YEAR, 1);
         }
 
-        // 2. Streak Logic
         int streak = 0;
         Calendar streakCal = Calendar.getInstance();
         String todayStr = sdf.format(streakCal.getTime());
@@ -135,7 +146,6 @@ public class ProfileFragment extends Fragment {
                 streakCal.add(Calendar.DAY_OF_YEAR, -1);
             }
         } else {
-            // Check if streak was active until yesterday
             streakCal.add(Calendar.DAY_OF_YEAR, -1);
             while (activityDates.contains(sdf.format(streakCal.getTime()))) {
                 streak++;

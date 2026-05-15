@@ -38,7 +38,7 @@ public class EducationFragment extends Fragment {
         Button btnLearn = v.findViewById(R.id.btnLearnMore);
         Button btnNext = v.findViewById(R.id.btnNextHormone);
 
-        gemini = new GeminiService();
+        gemini = new GeminiService(getContext());
 
         loadNewHormone();
 
