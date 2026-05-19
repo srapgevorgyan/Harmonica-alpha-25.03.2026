@@ -1,11 +1,14 @@
 package com.harmonica.application;
 
+import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -16,7 +19,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
@@ -28,11 +35,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 public class ZenSpaceFragment extends Fragment {
 
@@ -45,12 +57,21 @@ public class ZenSpaceFragment extends Fragment {
     private Button btnEndZen, btnSaveGratitude;
     private EditText editG1, editG2, editG3;
     private RecyclerView rvGroundingList;
+    private TextView txtLiveTranscription;
+    private FloatingActionButton fabMic;
+    
     private TextView txtPMRStep, txtPMRAction;
     private ProgressBar progressPMR;
     
     private boolean isRunning = true;
     private final Handler handler = new Handler(Looper.getMainLooper());
     
+    // Voice Grounding
+    private SpeechRecognizer speechRecognizer;
+    private int groundingStepCount = 5; // 5 see, 4 touch, etc.
+    private List<String> identifiedItems = new ArrayList<>();
+    private GroundingAdapter groundingAdapter;
+
     // Procedural Audio for Bilateral Stimulation
     private AudioTrack humTrack;
     private volatile float currentPan = 0.0f;
@@ -97,6 +118,8 @@ public class ZenSpaceFragment extends Fragment {
         txtPrompt = v.findViewById(R.id.txtGroundingPrompt);
         btnEndZen = v.findViewById(R.id.btnEndZen);
         rvGroundingList = v.findViewById(R.id.rvGroundingList);
+        txtLiveTranscription = v.findViewById(R.id.txtLiveTranscription);
+        fabMic = v.findViewById(R.id.fabMic);
         
         editG1 = v.findViewById(R.id.editGratitude1);
         editG2 = v.findViewById(R.id.editGratitude2);
@@ -128,6 +151,8 @@ public class ZenSpaceFragment extends Fragment {
             stopExercise();
         });
 
+        initSpeechRecognizer();
+
         if (type != null) {
             if ("Breathing".equalsIgnoreCase(type)) startBreathingExercise();
             else if ("Grounding".equalsIgnoreCase(type)) startGroundingExercise();
@@ -140,6 +165,99 @@ public class ZenSpaceFragment extends Fragment {
         }
 
         return v;
+    }
+
+    private void initSpeechRecognizer() {
+        if (SpeechRecognizer.isRecognitionAvailable(requireContext())) {
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(requireContext());
+            speechRecognizer.setRecognitionListener(new RecognitionListener() {
+                @Override public void onReadyForSpeech(Bundle params) { txtLiveTranscription.setText("Listening..."); }
+                @Override public void onBeginningOfSpeech() {}
+                @Override public void onRmsChanged(float rmsdB) {}
+                @Override public void onBufferReceived(byte[] buffer) {}
+                @Override public void onEndOfSpeech() {}
+                @Override public void onError(int error) { txtLiveTranscription.setText("Try again..."); }
+                @Override public void onResults(Bundle results) {
+                    ArrayList<String> data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                    if (data != null && !data.isEmpty()) {
+                        processGroundingInput(data.get(0));
+                    }
+                }
+                @Override public void onPartialResults(Bundle partialResults) {
+                    ArrayList<String> data = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                    if (data != null && !data.isEmpty()) txtLiveTranscription.setText(data.get(0));
+                }
+                @Override public void onEvent(int eventType, Bundle params) {}
+            });
+        }
+    }
+
+    private void processGroundingInput(String text) {
+        txtLiveTranscription.setText("\"" + text + "\"");
+        identifiedItems.add(text);
+        groundingAdapter.notifyItemInserted(identifiedItems.size() - 1);
+        rvGroundingList.scrollToPosition(identifiedItems.size() - 1);
+
+        if (identifiedItems.size() >= groundingStepCount) {
+            moveToNextGroundingStep();
+        }
+    }
+
+    private void moveToNextGroundingStep() {
+        groundingStepCount--;
+        identifiedItems.clear();
+        groundingAdapter.notifyDataSetChanged();
+        
+        if (groundingStepCount == 0) {
+            Toast.makeText(getContext(), "Grounding Complete. You are here, you are safe.", Toast.LENGTH_LONG).show();
+            stopExercise();
+            return;
+        }
+
+        String[] prompts = {
+            "Voice Grounding",
+            "Name 5 things you can SEE.",
+            "Name 4 things you can TOUCH.",
+            "Name 3 things you can HEAR.",
+            "Name 2 things you can SMELL.",
+            "Name 1 thing you can TASTE."
+        };
+        txtPrompt.setText(prompts[6 - groundingStepCount]);
+    }
+
+    private void startGroundingExercise() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, 101);
+            return;
+        }
+
+        layoutSelection.setVisibility(View.GONE);
+        layoutGrounding.setVisibility(View.VISIBLE);
+        isRunning = true;
+        groundingStepCount = 5;
+        identifiedItems.clear();
+        txtZenTitle.setText("Voice Grounding");
+        txtPrompt.setText("Hold the mic and name 5 things you can SEE.");
+        btnEndZen.setText("Stop Exercise");
+
+        groundingAdapter = new GroundingAdapter(identifiedItems);
+        rvGroundingList.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvGroundingList.setAdapter(groundingAdapter);
+
+        fabMic.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+                intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+                speechRecognizer.startListening(intent);
+                fabMic.setAlpha(0.5f);
+            } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                speechRecognizer.stopListening();
+                fabMic.setAlpha(1.0f);
+            }
+            return true;
+        });
     }
 
     private void resetToSelection() {
@@ -157,9 +275,11 @@ public class ZenSpaceFragment extends Fragment {
         isRunning = false;
         stopAudio();
         if (vibrator != null) vibrator.cancel();
+        if (speechRecognizer != null) speechRecognizer.stopListening();
         resetToSelection();
     }
 
+    // PMR Logic
     private void startPMRExercise() {
         layoutSelection.setVisibility(View.GONE);
         layoutPMR.setVisibility(View.VISIBLE);
@@ -178,17 +298,12 @@ public class ZenSpaceFragment extends Fragment {
             }
             return;
         }
-
         txtPMRStep.setText(pmrSteps[pmrCurrentStep]);
         txtPMRAction.setText("TENSE UP!");
         txtPMRAction.setTextColor(Color.RED);
-        
-        // Vibration for TENSE phase (Intense)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator.vibrate(VibrationEffect.createOneShot(5000, VibrationEffect.DEFAULT_AMPLITUDE));
-        } else {
-            vibrator.vibrate(5000);
-        }
+        } else { vibrator.vibrate(5000); }
 
         ValueAnimator progressAnim = ValueAnimator.ofInt(0, 100);
         progressAnim.setDuration(5000);
@@ -197,18 +312,12 @@ public class ZenSpaceFragment extends Fragment {
             @Override
             public void onAnimationEnd(Animator animation) {
                 if (!isRunning) return;
-                
                 txtPMRAction.setText("RELEASE...");
                 txtPMRAction.setTextColor(Color.parseColor("#4CAF50"));
                 vibrator.cancel();
-
-                // Soft pulse for RELEASE phase
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     vibrator.vibrate(VibrationEffect.createWaveform(new long[]{0, 200, 500}, new int[]{0, 50, 0}, 0));
-                } else {
-                    vibrator.vibrate(new long[]{0, 200, 500}, 0);
-                }
-
+                } else { vibrator.vibrate(new long[]{0, 200, 500}, 0); }
                 handler.postDelayed(() -> {
                     if (!isRunning) return;
                     vibrator.cancel();
@@ -220,13 +329,13 @@ public class ZenSpaceFragment extends Fragment {
         progressAnim.start();
     }
 
+    // Bilateral Logic
     private void startBilateralExercise() {
         layoutSelection.setVisibility(View.GONE);
         layoutBilateral.setVisibility(View.VISIBLE);
         isRunning = true;
         txtZenTitle.setText("Bilateral Session");
         btnEndZen.setText("Stop Exercise");
-        Toast.makeText(getContext(), "Connect headphones for the full EMDR effect.", Toast.LENGTH_SHORT).show();
         startAudioHum();
         layoutBilateral.post(() -> {
             float width = layoutBilateral.getWidth() - viewBilateralDot.getWidth();
@@ -242,10 +351,7 @@ public class ZenSpaceFragment extends Fragment {
         animator.setRepeatCount(ValueAnimator.INFINITE);
         animator.setRepeatMode(ValueAnimator.REVERSE);
         animator.addUpdateListener(animation -> {
-            if (!isRunning) {
-                animation.cancel();
-                return;
-            }
+            if (!isRunning) { animation.cancel(); return; }
             float translationX = (float) animation.getAnimatedValue();
             currentPan = (translationX / pathWidth) * 2.0f - 1.0f;
         });
@@ -327,27 +433,6 @@ public class ZenSpaceFragment extends Fragment {
         inhale.start();
     }
 
-    private void startGroundingExercise() {
-        layoutSelection.setVisibility(View.GONE);
-        layoutGrounding.setVisibility(View.VISIBLE);
-        txtZenTitle.setText("Grounding Session");
-        btnEndZen.setText("Finish");
-        txtPrompt.setText(instruction != null ? instruction : "Focus on your surroundings using the 5-4-3-2-1 method.");
-        rvGroundingList.setLayoutManager(new LinearLayoutManager(getContext()));
-        List<String> items = Arrays.asList("👀 5 things you SEE", "✋ 4 things you TOUCH", "👂 3 things you HEAR", "👃 2 things you SMELL", "👅 1 thing you TASTE");
-        rvGroundingList.setAdapter(new RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-            @NonNull @Override public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup p, int t) {
-                View v = LayoutInflater.from(p.getContext()).inflate(android.R.layout.simple_list_item_1, p, false);
-                return new RecyclerView.ViewHolder(v) {};
-            }
-            @Override public void onBindViewHolder(@NonNull RecyclerView.ViewHolder h, int p) {
-                ((TextView)h.itemView.findViewById(android.R.id.text1)).setText(items.get(p));
-                ((TextView)h.itemView.findViewById(android.R.id.text1)).setTextColor(Color.parseColor("#2D2D2D"));
-            }
-            @Override public int getItemCount() { return items.size(); }
-        });
-    }
-
     private void startGratitudeExercise() {
         layoutSelection.setVisibility(View.GONE);
         layoutGratitude.setVisibility(View.VISIBLE);
@@ -361,6 +446,26 @@ public class ZenSpaceFragment extends Fragment {
         isRunning = false;
         stopAudio();
         if (vibrator != null) vibrator.cancel();
+        if (speechRecognizer != null) speechRecognizer.destroy();
         handler.removeCallbacksAndMessages(null);
+    }
+
+    private static class GroundingAdapter extends RecyclerView.Adapter<GroundingAdapter.VH> {
+        private List<String> items;
+        GroundingAdapter(List<String> items) { this.items = items; }
+        @NonNull @Override public VH onCreateViewHolder(@NonNull ViewGroup p, int t) {
+            View v = LayoutInflater.from(p.getContext()).inflate(android.R.layout.simple_list_item_1, p, false);
+            return new VH(v);
+        }
+        @Override public void onBindViewHolder(@NonNull VH h, int p) {
+            h.tv.setText("✓ " + items.get(p));
+            h.tv.setTextColor(Color.parseColor("#4CAF50"));
+            h.tv.setPadding(32, 16, 32, 16);
+        }
+        @Override public int getItemCount() { return items.size(); }
+        static class VH extends RecyclerView.ViewHolder {
+            TextView tv;
+            VH(View v) { super(v); tv = v.findViewById(android.R.id.text1); }
+        }
     }
 }

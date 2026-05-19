@@ -147,7 +147,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="5-4-3-2-1 Grounding"
+                        android:text="Voice Grounding"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="@color/harmonica_primary" />
@@ -155,7 +155,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Re-center your mind using your five senses."
+                        android:text="Name your surroundings aloud to re-center."
                         android:textSize="13sp"
                         android:textColor="@color/harmonica_hint" />
                 </LinearLayout>
@@ -228,7 +228,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="vertical"
-        android:paddingTop="32dp"
+        android:paddingTop="16dp"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/btnEndZen"
         app:layout_constraintTop_toBottomOf="@id/txtZenSubtitle">
@@ -237,16 +237,41 @@
             android:id="@+id/txtGroundingPrompt"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Focus on your surroundings..."
+            android:text="Hold the mic and name 5 things you can SEE."
             android:textColor="@color/harmonica_text"
             android:textSize="18sp"
+            android:textStyle="bold"
+            android:gravity="center"
             android:lineSpacingExtra="4dp" />
-            
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvGroundingList"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="24dp" />
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="16dp" />
+            
+        <TextView
+            android:id="@+id/txtLiveTranscription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="..."
+            android:textColor="@color/harmonica_hint"
+            android:textSize="16sp"
+            android:textStyle="italic"
+            android:gravity="center" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabMic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="24dp"
+            app:backgroundTint="@color/harmonica_primary"
+            app:srcCompat="@android:drawable/ic_btn_speak_now"
+            app:tint="@android:color/white" />
+
     </LinearLayout>
 
     <!-- 4. Gratitude Container -->
