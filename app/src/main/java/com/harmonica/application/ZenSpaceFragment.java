@@ -5,13 +5,17 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
+import android.content.Context;
 import android.graphics.Color;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +23,7 @@ import android.view.animation.LinearInterpolator;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -35,17 +40,25 @@ public class ZenSpaceFragment extends Fragment {
     private View circle, viewBilateralDot;
     private TextView txtAction, txtPrompt, txtZenTitle;
     private View layoutSelection;
-    private LinearLayout layoutBreathing, layoutGrounding, layoutGratitude;
+    private LinearLayout layoutBreathing, layoutGrounding, layoutGratitude, layoutPMR;
     private View layoutBilateral;
     private Button btnEndZen, btnSaveGratitude;
     private EditText editG1, editG2, editG3;
     private RecyclerView rvGroundingList;
+    private TextView txtPMRStep, txtPMRAction;
+    private ProgressBar progressPMR;
+    
     private boolean isRunning = true;
     private final Handler handler = new Handler(Looper.getMainLooper());
     
     // Procedural Audio for Bilateral Stimulation
     private AudioTrack humTrack;
-    private volatile float currentPan = 0.0f; // -1.0 (left) to 1.0 (right)
+    private volatile float currentPan = 0.0f;
+
+    // Haptic PMR
+    private Vibrator vibrator;
+    private int pmrCurrentStep = 0;
+    private final String[] pmrSteps = {"Shoulders", "Arms & Hands", "Stomach", "Thighs", "Feet"};
 
     public static ZenSpaceFragment newInstance(String type, String title, String instruction) {
         ZenSpaceFragment fragment = new ZenSpaceFragment();
@@ -62,6 +75,8 @@ public class ZenSpaceFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_zen_space, container, false);
 
+        vibrator = (Vibrator) requireContext().getSystemService(Context.VIBRATOR_SERVICE);
+
         if (getArguments() != null) {
             type = getArguments().getString("type");
             title = getArguments().getString("title");
@@ -74,6 +89,7 @@ public class ZenSpaceFragment extends Fragment {
         layoutGrounding = v.findViewById(R.id.layoutGrounding);
         layoutGratitude = v.findViewById(R.id.layoutGratitude);
         layoutBilateral = v.findViewById(R.id.layoutBilateral);
+        layoutPMR = v.findViewById(R.id.layoutPMR);
         
         circle = v.findViewById(R.id.viewBreathingCircle);
         viewBilateralDot = v.findViewById(R.id.viewBilateralDot);
@@ -87,12 +103,17 @@ public class ZenSpaceFragment extends Fragment {
         editG3 = v.findViewById(R.id.editGratitude3);
         btnSaveGratitude = v.findViewById(R.id.btnSaveGratitude);
 
+        txtPMRStep = v.findViewById(R.id.txtPMRStep);
+        txtPMRAction = v.findViewById(R.id.txtPMRAction);
+        progressPMR = v.findViewById(R.id.progressPMR);
+
         txtZenTitle.setText(title != null ? title : "Zen Space");
 
         v.findViewById(R.id.cardBreathing).setOnClickListener(view -> startBreathingExercise());
         v.findViewById(R.id.cardGrounding).setOnClickListener(view -> startGroundingExercise());
         v.findViewById(R.id.cardGratitude).setOnClickListener(view -> startGratitudeExercise());
         v.findViewById(R.id.cardBilateral).setOnClickListener(view -> startBilateralExercise());
+        v.findViewById(R.id.cardPMR).setOnClickListener(view -> startPMRExercise());
 
         btnEndZen.setOnClickListener(view -> {
             if (layoutSelection.getVisibility() == View.VISIBLE) {
@@ -112,6 +133,7 @@ public class ZenSpaceFragment extends Fragment {
             else if ("Grounding".equalsIgnoreCase(type)) startGroundingExercise();
             else if ("Gratitude".equalsIgnoreCase(type)) startGratitudeExercise();
             else if ("Bilateral".equalsIgnoreCase(type)) startBilateralExercise();
+            else if ("PMR".equalsIgnoreCase(type) || "Muscle Relaxation".equalsIgnoreCase(type)) startPMRExercise();
             else resetToSelection();
         } else {
             resetToSelection();
@@ -126,6 +148,7 @@ public class ZenSpaceFragment extends Fragment {
         layoutGrounding.setVisibility(View.GONE);
         layoutGratitude.setVisibility(View.GONE);
         layoutBilateral.setVisibility(View.GONE);
+        layoutPMR.setVisibility(View.GONE);
         txtZenTitle.setText("Zen Space");
         btnEndZen.setText("Back");
     }
@@ -133,7 +156,68 @@ public class ZenSpaceFragment extends Fragment {
     private void stopExercise() {
         isRunning = false;
         stopAudio();
+        if (vibrator != null) vibrator.cancel();
         resetToSelection();
+    }
+
+    private void startPMRExercise() {
+        layoutSelection.setVisibility(View.GONE);
+        layoutPMR.setVisibility(View.VISIBLE);
+        isRunning = true;
+        txtZenTitle.setText("Muscle Relaxation");
+        btnEndZen.setText("Stop Exercise");
+        pmrCurrentStep = 0;
+        runPMRCycle();
+    }
+
+    private void runPMRCycle() {
+        if (!isRunning || pmrCurrentStep >= pmrSteps.length) {
+            if (pmrCurrentStep >= pmrSteps.length) {
+                Toast.makeText(getContext(), "Exercise complete. Feel the relaxation.", Toast.LENGTH_LONG).show();
+                stopExercise();
+            }
+            return;
+        }
+
+        txtPMRStep.setText(pmrSteps[pmrCurrentStep]);
+        txtPMRAction.setText("TENSE UP!");
+        txtPMRAction.setTextColor(Color.RED);
+        
+        // Vibration for TENSE phase (Intense)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(5000, VibrationEffect.DEFAULT_AMPLITUDE));
+        } else {
+            vibrator.vibrate(5000);
+        }
+
+        ValueAnimator progressAnim = ValueAnimator.ofInt(0, 100);
+        progressAnim.setDuration(5000);
+        progressAnim.addUpdateListener(animation -> progressPMR.setProgress((int) animation.getAnimatedValue()));
+        progressAnim.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (!isRunning) return;
+                
+                txtPMRAction.setText("RELEASE...");
+                txtPMRAction.setTextColor(Color.parseColor("#4CAF50"));
+                vibrator.cancel();
+
+                // Soft pulse for RELEASE phase
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator.vibrate(VibrationEffect.createWaveform(new long[]{0, 200, 500}, new int[]{0, 50, 0}, 0));
+                } else {
+                    vibrator.vibrate(new long[]{0, 200, 500}, 0);
+                }
+
+                handler.postDelayed(() -> {
+                    if (!isRunning) return;
+                    vibrator.cancel();
+                    pmrCurrentStep++;
+                    runPMRCycle();
+                }, 5000);
+            }
+        });
+        progressAnim.start();
     }
 
     private void startBilateralExercise() {
@@ -142,10 +226,8 @@ public class ZenSpaceFragment extends Fragment {
         isRunning = true;
         txtZenTitle.setText("Bilateral Session");
         btnEndZen.setText("Stop Exercise");
-
         Toast.makeText(getContext(), "Connect headphones for the full EMDR effect.", Toast.LENGTH_SHORT).show();
         startAudioHum();
-        
         layoutBilateral.post(() -> {
             float width = layoutBilateral.getWidth() - viewBilateralDot.getWidth();
             runBilateralAnimation(width);
@@ -154,70 +236,54 @@ public class ZenSpaceFragment extends Fragment {
 
     private void runBilateralAnimation(float pathWidth) {
         if (!isRunning || viewBilateralDot == null) return;
-
         ObjectAnimator animator = ObjectAnimator.ofFloat(viewBilateralDot, "translationX", 0, pathWidth);
-        animator.setDuration(1800); // 1.8 seconds per side
+        animator.setDuration(1800);
         animator.setInterpolator(new LinearInterpolator());
         animator.setRepeatCount(ValueAnimator.INFINITE);
         animator.setRepeatMode(ValueAnimator.REVERSE);
-
         animator.addUpdateListener(animation -> {
             if (!isRunning) {
                 animation.cancel();
                 return;
             }
             float translationX = (float) animation.getAnimatedValue();
-            // Map 0 -> pathWidth to -1.0 (Left) -> 1.0 (Right)
             currentPan = (translationX / pathWidth) * 2.0f - 1.0f;
         });
-
         animator.start();
     }
 
     private void startAudioHum() {
         stopAudio();
         isRunning = true;
-        
         new Thread(() -> {
             int sampleRate = 44100;
             int minSize = AudioTrack.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT);
-            
             try {
                 humTrack = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate, 
                         AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT, 
                         minSize, AudioTrack.MODE_STREAM);
-                
                 short[] buffer = new short[minSize];
                 double phase = 0;
                 humTrack.play();
-                
                 while (isRunning && humTrack != null) {
                     for (int i = 0; i < buffer.length / 2; i++) {
-                        phase += 2 * Math.PI * 180.0 / sampleRate; // 180Hz smooth hum
-                        short val = (short) (Math.sin(phase) * 7000); // Decent volume
-                        
+                        phase += 2 * Math.PI * 220.0 / sampleRate;
+                        short val = (short) (Math.sin(phase) * 12000);
                         float pan = currentPan;
-                        // Equal power-ish panning (simplified)
                         float leftVol = (1.0f - pan) / 2.0f;
                         float rightVol = (1.0f + pan) / 2.0f;
-                        
                         buffer[i * 2] = (short) (val * leftVol);
                         buffer[i * 2 + 1] = (short) (val * rightVol);
                     }
                     if (humTrack != null) humTrack.write(buffer, 0, buffer.length);
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            } catch (Exception e) { e.printStackTrace(); }
         }).start();
     }
 
     private void stopAudio() {
         if (humTrack != null) {
-            try {
-                humTrack.stop();
-                humTrack.release();
-            } catch (Exception ignored) {}
+            try { humTrack.stop(); humTrack.release(); } catch (Exception ignored) {}
             humTrack = null;
         }
     }
@@ -233,13 +299,11 @@ public class ZenSpaceFragment extends Fragment {
 
     private void runBreathingCycle() {
         if (!isRunning || circle == null) return;
-
         txtAction.setText("Inhale...");
         ObjectAnimator inhale = ObjectAnimator.ofPropertyValuesHolder(circle,
                 PropertyValuesHolder.ofFloat("scaleX", 1f, 1.5f),
                 PropertyValuesHolder.ofFloat("scaleY", 1f, 1.5f));
         inhale.setDuration(4000);
-        
         inhale.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
@@ -296,6 +360,7 @@ public class ZenSpaceFragment extends Fragment {
         super.onDestroyView();
         isRunning = false;
         stopAudio();
+        if (vibrator != null) vibrator.cancel();
         handler.removeCallbacksAndMessages(null);
     }
 }

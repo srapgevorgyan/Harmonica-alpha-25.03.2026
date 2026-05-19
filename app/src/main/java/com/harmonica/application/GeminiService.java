@@ -114,6 +114,7 @@ public class GeminiService {
                 .append("THERAPEUTIC FRAMEWORKS TO UTILIZE:\n")
                 .append("- Grounding (Anxiety/Panic): Guide them through the 5-4-3-2-1 method or box breathing.\n")
                 .append("- Bilateral Stimulation (Panic/Anxiety): Suggest this specifically for physical panic symptoms. It involves moving eyes side-to-side.\n")
+                .append("- PMR / Muscle Relaxation (Stress/Physical Tension): Suggest tensing and releasing muscles to drop physical anxiety.\n")
                 .append("- CBT (Depression/Anxiety): Gently point out cognitive distortions (like catastrophizing) and encourage reframing negative thoughts.\n")
                 .append("- DBT (Severe Distress): Suggest T.I.P.P. skills (like splashing cold water on their face) to reset their nervous system.\n")
                 .append("- Behavioral Activation (Burnout/Depression): Suggest micro-goals. Break tasks down into ridiculously small, manageable steps.\n\n")
@@ -125,7 +126,7 @@ public class GeminiService {
                 .append("  \"advice\": \"Practical steps they can take right now...\", \n")
                 .append("  \"chatTitle\": \"Short session title\", \n")
                 .append("  \"suggestedMode\": \"None\" | \"Calm\" | \"Focus\" | \"Elevate\" | \"Crisis\", \n")
-                .append("  \"suggestedPractices\": [ { \"title\": \"Friendly Name\", \"type\": \"Breathing\"|\"Grounding\"|\"Bilateral\", \"instruction\": \"Steps\" } ] \n")
+                .append("  \"suggestedPractices\": [ { \"title\": \"Friendly Name\", \"type\": \"Breathing\"|\"Grounding\"|\"Bilateral\"|\"PMR\", \"instruction\": \"Steps\" } ] \n")
                 .append("}\n\n")
                 .append("SESSION HISTORY:\n");
 

@@ -46,6 +46,35 @@
             android:paddingBottom="16dp">
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardPMR"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Muscle Relaxation"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/harmonica_primary" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Tense and release muscles to drop physical anxiety."
+                        android:textSize="13sp"
+                        android:textColor="@color/harmonica_hint" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardBilateral"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -309,6 +338,45 @@
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- 6. PMR Container -->
+    <LinearLayout
+        android:id="@+id/layoutPMR"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/btnEndZen"
+        app:layout_constraintTop_toBottomOf="@id/txtZenSubtitle">
+
+        <TextView
+            android:id="@+id/txtPMRStep"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Shoulders"
+            android:textColor="@color/harmonica_primary"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txtPMRAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Tense up!"
+            android:textColor="@color/harmonica_text"
+            android:textSize="20sp" />
+
+        <ProgressBar
+            android:id="@+id/progressPMR"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:max="100" />
+            
+    </LinearLayout>
 
     <Button
         android:id="@+id/btnEndZen"
