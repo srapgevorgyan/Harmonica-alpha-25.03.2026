@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 
 public class GeminiService {
-    private final String API_KEY_DEFAULT = "AIzaSyCrxOXSj7TmvsYovCWLZBVRnLbGijMLESk";
+    private final String API_KEY_DEFAULT = "AIzaSyBF7uJZzGKTeg7O7Be7UE4yqSJJbnm9x4s";
     private GenerativeModelFutures model;
 
     public static class MoodAnalysis {

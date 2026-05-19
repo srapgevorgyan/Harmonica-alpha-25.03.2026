@@ -144,11 +144,12 @@
         app:layout_constraintRight_toRightOf="parent">
 
         <ImageButton
+            android:id="@+id/btnMic"
             android:layout_width="42dp"
             android:layout_height="42dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:padding="10dp"
-            android:src="@drawable/ic_chat_bubble"
+            android:src="@android:drawable/ic_btn_speak_now"
             app:tint="@color/harmonica_primary" />
 
         <EditText
