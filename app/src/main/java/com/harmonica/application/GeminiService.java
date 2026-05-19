@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 
 public class GeminiService {
-    private final String API_KEY_DEFAULT = "AIzaSyAOgWzU3wAfLWgW6ENRV1O30wiy68GzlDU";
+    private final String API_KEY_DEFAULT = "AIzaSyCrxOXSj7TmvsYovCWLZBVRnLbGijMLESk";
     private GenerativeModelFutures model;
 
     public static class MoodAnalysis {
@@ -103,6 +103,14 @@ public class GeminiService {
                 .append("- Format actionable advice as a short bulleted list using Markdown (-).\n")
                 .append("- Integrate therapeutic techniques naturally into your response.\n")
                 .append("- If you detect stress, anxiety, panic, or low mood, explicitly suggest they visit the 'Zen Space' in the sidebar menu for guided breathing or grounding.\n\n")
+                .append("MOOD SCORING SYSTEM (CRITICAL):\n")
+                .append("- Assign a 'score' from 0 to 10 based on the user's emotional state.\n")
+                .append("- 0: Extreme distress, suicidal thoughts, or severe panic.\n")
+                .append("- 2: Very sad, highly anxious, or deeply overwhelmed.\n")
+                .append("- 5: Neutral, okay, or 'just fine'.\n")
+                .append("- 8: Happy, motivated, or feeling good.\n")
+                .append("- 10: Exceptionally positive, joyful, or enlightened.\n")
+                .append("- Use the FULL range. If the user says 'I feel bad', the score should be around 2-3, NOT 8.\n\n")
                 .append("THERAPEUTIC FRAMEWORKS TO UTILIZE:\n")
                 .append("- Grounding (Anxiety/Panic): Guide them through the 5-4-3-2-1 method or box breathing.\n")
                 .append("- CBT (Depression/Anxiety): Gently point out cognitive distortions (like catastrophizing) and encourage reframing negative thoughts.\n")
@@ -110,7 +118,7 @@ public class GeminiService {
                 .append("- Behavioral Activation (Burnout/Depression): Suggest micro-goals. Break tasks down into ridiculously small, manageable steps.\n\n")
                 .append("JSON SCHEMA (MANDATORY):\n")
                 .append("{ \n")
-                .append("  \"score\": number, \n")
+                .append("  \"score\": number (0-10 integer), \n")
                 .append("  \"label\": string, \n")
                 .append("  \"insight\": \"Your direct, empathetic response to the user...\", \n")
                 .append("  \"advice\": \"Practical steps they can take right now...\", \n")
@@ -174,6 +182,9 @@ public class GeminiService {
         try {
             JSONObject json = new JSONObject(cleanJson(raw));
             m.score = json.optInt("score", 5);
+            // Ensure score is within bounds if AI hallucinates
+            m.score = Math.max(0, Math.min(10, m.score));
+            
             m.label = json.optString("label", "Neutral");
             m.insight = json.optString("insight", "");
             m.advice = json.optString("advice", "");

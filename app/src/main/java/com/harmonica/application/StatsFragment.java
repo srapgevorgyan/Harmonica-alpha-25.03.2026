@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -110,8 +111,13 @@ public class StatsFragment extends Fragment {
         chart.getDescription().setEnabled(false);
         chart.getLegend().setEnabled(false);
         chart.getAxisRight().setEnabled(false);
-        chart.getAxisLeft().setAxisMaximum(10.5f);
-        chart.getAxisLeft().setAxisMinimum(0f);
+        
+        YAxis leftAxis = chart.getAxisLeft();
+        leftAxis.setAxisMaximum(10f);
+        leftAxis.setAxisMinimum(0f);
+        leftAxis.setLabelCount(6, true); // Shows 0, 2, 4, 6, 8, 10
+        leftAxis.setGranularity(1f);
+        
         xAxis.setYOffset(10f);
 
         chart.animateY(1200);
